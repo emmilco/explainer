@@ -1,0 +1,13 @@
+# Rendered output — regenerable from decks/ via render.py; large audio binaries.
+# say audio re-renders instantly; Fish/Irons audio needs the GPU to reproduce.
+out/
+
+# Transient render scratch
+**/_fish_jobs.json
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
