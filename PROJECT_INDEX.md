@@ -20,6 +20,8 @@ verified but not yet run or latency-measured — needs exclusive GPU access.
 | `decks/` | Source decks in the authoring format (`<name>.md`). |
 | `out/<name>/` | Rendered output: `index.html` + content-hashed `audio/seg_<hash>.mp3`. |
 | `catalog/server.py` | FastAPI catalog app (lab-server `[apps.explainers]`, port 7250). Lists every rendered explainer by title, length, and creation date; mounts `out/` at `/view` so titles link to the live deck. Length is summed only over `index.html`'s referenced audio, so it reflects the current render and never double-counts cached say/fish audio. Reachable at `https://explainers.emmilco.com` when `./lab` runs. |
+| `tools/` | Headless self-review utilities (run under a playwright-equipped python, e.g. `../ft-briefing/.venv-acquire/bin/python`). `shoot.py <deck> [slide...]` screenshots slides to `/tmp/shots/<deck>/`; `audit_overflow.py <deck>` reports per-slide horizontal/vertical overflow so layout bugs are located by measurement, not eyeballing. |
+| `.claude/` | Project harness config. `hooks/bash-guard.sh` is a `PreToolUse` Bash guard (wired in `settings.local.json`) that flags `rm` commands for manual approval and auto-approves other bash. |
 
 ## Deck authoring format
 
@@ -43,8 +45,47 @@ prose compete for the same channel and clash (the redundancy effect). So:
   ("Too big? Discard the right half.") is the thing that clashes.
 
 Supported visual elements: markdown label lists, `$inline$` / `$$display$$`
-math (KaTeX), fenced ` ```python ` (etc.) code, and fenced ` ```mermaid `
-diagrams.
+math (KaTeX), fenced ` ```python ` (etc.) code, fenced ` ```mermaid `
+diagrams, and custom SVG using the shared **visual vocabulary** (below).
+
+**Math gotcha:** the markdown pass (marked.js) strips the backslash from
+markdown-escapable punctuation — so `\%`, `\&`, `\_`, `\#` etc. inside `$…$`
+reach KaTeX as bare `%`/`&`/… and break it (a bare `%` starts a KaTeX comment).
+Avoid those chars in math; write prose as prose, not `\text{}`-stuffed display
+math. Prefer a `.viz` chart over prose-in-math anyway.
+
+### Visual vocabulary (the diagram + motion design system)
+
+Custom diagrams are authored as plain SVG wrapped in `<div class="viz">` and
+draw on a shared class system defined once in `render.py`'s template — no
+per-slide `<style>` blocks. `decks/visual-vocabulary.md` is the live reference
+deck; copy its patterns. The system:
+
+- **container** — `.viz` (centres, contains; `.wide` / `.narrow` to size).
+- **nodes** — `.node` + role `accent`/`good`/`warn`/`danger`/`plum`/`muted`.
+- **edges** — `.edge` + `accent`/`good`/`strong`/`warn`/`plum`/`danger`/`ghost`;
+  arrowheads via a per-SVG `<marker>` (unique id per slide to avoid collisions).
+- **labels** — `.lbl` (+ `on-fill`/`mono`/`sm`/`left`), `.cap` (+ `left`), `.tag`;
+  `.olbl` hangs a label *beside* a node too small to hold its text.
+- **code** — `.code` is left-aligned monospace for a snippet / JSON / annotation
+  inside a diagram. (Per-element text overrides must use inline `style=`, not the
+  SVG presentation attribute — a class's CSS beats the attribute.)
+- **datastore** — `.store` (+ role) draws a database / log cylinder: a body
+  `<path>` + a top `<ellipse>`, both `class="store"`.
+- **bars** — `.track` + `.bar` (role) + `.axis`.
+- **grid/matrix** — `.cell` + `on`/`off`/`hot`/`sel`.
+- **token** — `.token` (role) flowed along a path with eased `animateMotion`
+  (`calcMode="spline"` + `keySplines`), not linear.
+- **failure** — `.x-mark` (two crossed strokes over a node) paired with `m-dim`
+  is the "a node dies" gesture.
+- **motion primitives** — `m-in` / `m-rise` (staggerable via `style="--i:N"`),
+  `m-pulse`, `m-dim` (`--d` delay), `m-draw` (`--len` path length), `m-beat`.
+  All share two eased curves (`--ease-out`, `--ease-io`); honours
+  `prefers-reduced-motion`.
+
+Layout is a 16:9 (1280×720) canvas, top-aligned (`center:false`), scaled to the
+window; tables/code/math/`.viz` are hard-capped to the slide width so nothing
+overflows the right edge.
 
 ## Conventions
 

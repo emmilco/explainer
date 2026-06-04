@@ -172,58 +172,187 @@ HTML = r"""<!doctype html>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500&display=swap">
 <style>
   :root{
+    /* palette — FT salmon */
     --paper:#FFF1E5; --paper-deep:#F6E5D2; --paper-edge:#ECDDC5;
     --ink:#262A33; --ink-soft:#4D4944; --muted:#7A736C; --muted-soft:#9C948A;
     --rule:#E0CFB8; --rule-strong:#B9A78A;
-    --pos:#0F5D5D; --neg:#9D3A24; --warn:#A87B12; --info:#1A3F70;
-    --serif:'Source Serif 4', Georgia, 'Times New Roman', serif;
-    --sans:'Source Sans 3', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    --pos:#0F5D5D; --neg:#9D3A24; --warn:#A87B12; --info:#1A3F70; --plum:#6B2C5E;
+    --info-soft:#B5C5DC; --pos-soft:#B7CFCA; --warn-soft:#DDC58A; --neg-soft:#E2BFAC; --plum-soft:#C9B7E0;
+    /* type */
+    --serif:'Source Serif 4', Georgia, serif;
+    --sans:'Source Sans 3', system-ui, -apple-system, sans-serif;
     --mono:'Source Code Pro', ui-monospace, Menlo, monospace;
+    /* spacing scale */
+    --sp-1:.25em; --sp-2:.5em; --sp-3:.75em; --sp-4:1em; --sp-6:1.5em;
+    /* diagram tokens */
+    --node-fill:#F6E5D2; --node-stroke:#1A3F70; --edge:#B9A78A; --edge-strong:#7A736C;
+    --stroke-hair:1.25px; --stroke-reg:1.75px; --stroke-bold:2.75px;
+    /* motion */
+    --ease-out:cubic-bezier(.22,1,.36,1); --ease-io:cubic-bezier(.65,0,.35,1);
   }
+
+  /* ——— canvas & base ——— */
   html, body, .reveal, .reveal-viewport { background: var(--paper); }
-  .reveal { font-family: var(--sans); color: var(--ink); font-size: 32px; line-height: 1.5; }
+  .reveal { font-family: var(--sans); color: var(--ink); font-size: 30px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased; }
   .reveal .slides { text-align: left; }
-  .reveal .slides section { text-align: left; padding: 0 4%; }
+  .reveal .slides section { text-align: left; padding: 3.4% 5.4% 2.4%; }
+  .reveal .slides section > * { max-width: 100%; }            /* hard overflow guard */
+
+  /* ——— headings ——— */
   .reveal h1, .reveal h2, .reveal h3 {
     font-family: var(--serif); color: var(--ink); font-weight: 600;
-    text-transform: none; letter-spacing: -0.005em; line-height: 1.12; margin: 0 0 .5em;
-  }
-  .reveal h1 { font-size: 2.3em; }
-  .reveal h2 { font-size: 1.7em; padding-bottom: .26em; border-bottom: 1px solid var(--rule); }
-  .reveal p { line-height: 1.5; }
-  .reveal ul { list-style: none; margin-left: 0; padding-left: 0; }
-  .reveal li { margin: .36em 0; padding-left: 1.1em; position: relative; line-height: 1.5; }
-  .reveal li::before { content: ''; position: absolute; left: 0; top: .58em;
-    width: .4em; height: .4em; background: var(--rule-strong); }
+    text-transform: none; letter-spacing: -.006em; line-height: 1.12; margin: 0 0 var(--sp-3); }
+  .reveal h1 { font-size: 2.2em; }
+  .reveal h2 { font-size: 1.55em; padding-bottom: .24em; margin-bottom: var(--sp-4);
+    border-bottom: 1px solid var(--rule); }
+  .reveal h3 { font-size: 1.18em; color: var(--ink-soft); }
+
+  /* ——— prose & lists ——— */
+  .reveal p { line-height: 1.5; margin: 0 0 var(--sp-3); }
+  .reveal ul, .reveal ol { list-style: none; margin: 0; padding: 0; }
+  .reveal li { margin: var(--sp-2) 0; padding-left: 1.15em; position: relative; line-height: 1.45; }
+  .reveal ul > li::before { content: ''; position: absolute; left: 0; top: .56em;
+    width: .38em; height: .38em; border-radius: 1px; background: var(--rule-strong); }
+  .reveal ol { counter-reset: li; }
+  .reveal ol > li::before { counter-increment: li; content: counter(li);
+    position: absolute; left: 0; top: .1em; font: 600 .62em var(--mono); color: var(--info); }
   .reveal strong { color: var(--info); font-weight: 600; }
   .reveal em { font-style: italic; color: var(--ink-soft); }
-  .reveal a { color: var(--info); }
-  .reveal code { font-family: var(--mono); }
-  .reveal pre { width: 100%; box-shadow: none; margin: .6em 0; font-size: .6em; }
+  .reveal a { color: var(--info); text-decoration: none; border-bottom: 1px solid var(--info-soft); }
+
+  /* ——— code (contained, never overflows the slide) ——— */
+  .reveal code { font-family: var(--mono); font-size: .92em;
+    background: var(--paper-deep); padding: .05em .3em; border-radius: 4px; }
+  .reveal pre { width: 100%; box-shadow: none; margin: var(--sp-3) 0; font-size: .5em; }
   .reveal pre code, .reveal pre code.hljs {
     font-family: var(--mono); background: var(--paper-deep); color: var(--ink);
-    border: 1px solid var(--rule); border-radius: 8px;
-    padding: 1em 1.2em; line-height: 1.5; max-height: none;
-  }
+    border: 1px solid var(--rule); border-radius: 8px; padding: .9em 1.1em;
+    line-height: 1.5; max-height: 48vh; overflow: auto; }
+
+  /* ——— math ——— */
   .reveal .katex { color: var(--ink); }
-  .reveal .katex-display { text-align: center; margin: .7em 0; font-size: 1.15em; }
-  .reveal .mermaid { display: flex; justify-content: center; margin: .3em 0; }
-  .reveal .mermaid svg { max-width: 100%; max-height: 60vh; height: auto; }
+  .reveal .katex-display { text-align: center; margin: var(--sp-4) 0; font-size: 1.08em;
+    max-width: 100%; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
+
+  /* ——— tables (fit the slide) ——— */
+  .reveal table { border-collapse: collapse; margin: var(--sp-3) 0; font-size: .58em; width: 100%; }
+  .reveal table th, .reveal table td { padding: .42em .7em; text-align: left;
+    border-bottom: 1px solid var(--rule); vertical-align: top; }
+  .reveal table th { font-family: var(--sans); font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .04em; font-size: .82em;
+    border-bottom: 1.5px solid var(--rule-strong); }
+  .reveal table tr:last-child td { border-bottom: none; }
+
+  /* ——— blockquote ——— */
   .reveal blockquote { border-left: 3px solid var(--rule-strong);
-    padding: .1em .9em; margin: .4em 0; box-shadow: none; background: none;
+    padding: .1em .9em; margin: var(--sp-3) 0; box-shadow: none; background: none;
     color: var(--muted); font-style: italic; font-family: var(--serif); }
+
+  /* ——— mermaid ——— */
+  .reveal .mermaid { display: flex; justify-content: center; margin: var(--sp-2) 0; }
+  .reveal .mermaid svg { max-width: 100%; max-height: 44vh; height: auto; margin: 0 auto; }
+  /* pin label typography so reveal's base font can't inflate boxes mermaid sized smaller */
+  .reveal .mermaid .nodeLabel, .reveal .mermaid .edgeLabel,
+  .reveal .mermaid foreignObject div, .reveal .mermaid foreignObject p, .reveal .mermaid span {
+    font-size: 15px !important; line-height: 1.3 !important;
+    font-family: var(--sans) !important; color: var(--ink) !important; white-space: normal !important; }
+
+  /* ═══════════ DIAGRAM VOCABULARY ═══════════ */
+  /* container — keeps every diagram centred and inside the slide */
+  .reveal .viz { display: flex; justify-content: center; align-items: center;
+    margin: var(--sp-2) auto var(--sp-1); width: 100%; }
+  .reveal .viz svg { width: 100%; max-width: 800px; max-height: 42vh; height: auto;
+    overflow: visible; font-family: var(--sans); }
+  .reveal .viz.wide svg   { max-width: 1080px; }
+  .reveal .viz.narrow svg { max-width: 460px; }
+  /* nodes — semantic roles */
+  .viz .node { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: var(--stroke-reg); }
+  .viz .node.accent { fill: var(--info);      stroke: var(--info); }
+  .viz .node.good   { fill: var(--pos-soft);  stroke: var(--pos); }
+  .viz .node.warn   { fill: var(--warn-soft); stroke: var(--warn); }
+  .viz .node.danger { fill: var(--neg-soft);  stroke: var(--neg); }
+  .viz .node.plum   { fill: var(--plum-soft); stroke: var(--plum); }
+  .viz .node.muted  { fill: var(--paper-edge); stroke: var(--rule-strong); }
+  /* edges */
+  .viz .edge { fill: none; stroke: var(--edge); stroke-width: var(--stroke-reg); stroke-linecap: round; }
+  .viz .edge.strong { stroke: var(--edge-strong); }
+  .viz .edge.accent { stroke: var(--info); }
+  .viz .edge.good   { stroke: var(--pos); stroke-width: var(--stroke-bold); }
+  .viz .edge.danger { stroke: var(--neg); }
+  .viz .edge.warn   { stroke: var(--warn); }
+  .viz .edge.plum   { stroke: var(--plum); }
+  .viz .edge.ghost  { stroke-dasharray: 5 6; opacity: .75; }
+  /* failure mark — two crossed strokes over a node; pair with m-dim for "node dies" */
+  .viz .x-mark { stroke: var(--neg); stroke-width: var(--stroke-bold); stroke-linecap: round; }
+  /* labels */
+  .viz .lbl { fill: var(--ink); font-size: 15px; text-anchor: middle; dominant-baseline: middle; }
+  .viz .lbl.on-fill { fill: #fff; }
+  .viz .lbl.mono { font-family: var(--mono); font-size: 13px; }
+  .viz .lbl.sm  { font-size: 12.5px; }                       /* fits a small (~r18) node */
+  .viz .lbl.left, .viz .cap.left { text-anchor: start; }     /* left-align (CSS beats the attr) */
+  /* external label — hangs beside a node too small to hold its text */
+  .viz .olbl { fill: var(--muted); font-size: 12.5px; text-anchor: middle; dominant-baseline: middle; }
+  /* code / structured text in a diagram — left-aligned monospace */
+  .viz .code { font-family: var(--mono); font-size: 13px; fill: var(--ink); text-anchor: start; }
+  .viz .cap { fill: var(--muted); font-size: 12.5px; text-anchor: middle; letter-spacing: .03em; }
+  .viz .tag { fill: var(--muted); font-size: 11px; text-anchor: middle;
+    text-transform: uppercase; letter-spacing: .09em; }
+  /* bars & quantities */
+  .viz .bar { fill: var(--info); }
+  .viz .bar.good{fill:var(--pos);} .viz .bar.warn{fill:var(--warn);}
+  .viz .bar.danger{fill:var(--neg);} .viz .bar.muted{fill:#D9CBB2;}
+  .viz .track { fill: var(--paper-deep); }
+  .viz .axis { stroke: var(--rule-strong); stroke-width: 1.25px; }
+  /* grid / matrix cells */
+  .viz .cell { fill: #FBF4E6; stroke: #fff; stroke-width: 2px; }
+  .viz .cell.on{fill:var(--pos-soft);} .viz .cell.off{fill:var(--paper-edge);}
+  .viz .cell.hot{fill:var(--neg-soft);} .viz .cell.sel{fill:var(--warn-soft);}
+  /* datastore — a database / log cylinder. Draw a body <path> + a top <ellipse>,
+     both class="store" (see the vocabulary deck for the snippet). */
+  .viz .store { fill: var(--node-fill); stroke: var(--node-stroke); stroke-width: var(--stroke-reg); }
+  .viz .store.good   { fill: var(--pos-soft);  stroke: var(--pos); }
+  .viz .store.warn   { fill: var(--warn-soft); stroke: var(--warn); }
+  .viz .store.accent { fill: var(--info);      stroke: var(--info); }
+  /* moving token */
+  .viz .token { fill: var(--neg); }
+  .viz .token.accent{fill:var(--info);} .viz .token.good{fill:var(--pos);}
+  /* arrowheads use marker refs; authors add a <defs> with id=arr / id=arrA (see vocabulary deck) */
+
+  /* ═══════════ MOTION PRIMITIVES (named, eased, opt-in) ═══════════ */
+  /* fade-in — HTML + SVG; stagger with style="--i:N" */
+  @keyframes m-in { from{opacity:0;} to{opacity:1;} }
+  .m-in { opacity:0; animation: m-in .65s var(--ease-out) forwards; animation-delay: calc(var(--i,0)*.14s); }
+  /* rise-in — HTML elements */
+  @keyframes m-rise { from{opacity:0; transform:translateY(7px);} to{opacity:1; transform:none;} }
+  .m-rise { opacity:0; animation: m-rise .7s var(--ease-out) forwards; animation-delay: calc(var(--i,0)*.14s); }
+  /* gentle pulse — attention */
+  @keyframes m-pulse { 0%,100%{opacity:.5;} 50%{opacity:1;} }
+  .m-pulse { animation: m-pulse 2.6s var(--ease-io) infinite; }
+  /* dim — de-emphasize / "this recedes" */
+  @keyframes m-dim { to{opacity:.28;} }
+  .m-dim { animation: m-dim .8s var(--ease-io) forwards; animation-delay: var(--d,0s); }
+  /* draw-on a stroke — set style="--len:<path length>" */
+  @keyframes m-draw { from{stroke-dashoffset: var(--len,240);} to{stroke-dashoffset:0;} }
+  .m-draw { stroke-dasharray: var(--len,240); animation: m-draw 1.1s var(--ease-out) forwards;
+    animation-delay: calc(var(--i,0)*.12s); }
+  /* breathing emphasis */
+  @keyframes m-beat { 0%,100%{transform:scale(1);} 50%{transform:scale(1.06);} }
+  .m-beat { transform-box: fill-box; transform-origin: center; animation: m-beat 2.4s var(--ease-io) infinite; }
+  @media (prefers-reduced-motion: reduce){ .m-in,.m-rise,.m-draw{animation-duration:.01s;} .m-pulse,.m-beat{animation:none;} }
+
+  /* ——— chrome ——— */
   .reveal .slide-number { background: transparent; color: var(--muted);
     font-family: var(--sans); font-size: 14px; letter-spacing: .05em;
-    right: auto; left: 12px; bottom: 12px; top: auto; }
+    right: auto; left: 14px; bottom: 13px; top: auto; }
   .reveal .controls { color: var(--ink); }
   .reveal .controls button { animation: none !important; }
-
   #start { position: fixed; inset: 0; background: var(--paper);
     display: flex; align-items: center; justify-content: center; z-index: 1000; cursor: pointer; }
   #start span { font-family: var(--serif); color: var(--ink);
     font-size: 1.5rem; font-weight: 600; padding: .7rem 2rem;
     border: 1px solid var(--ink); border-radius: 4px; letter-spacing: .01em; }
-  .badge { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%);
+  .badge { position: fixed; bottom: 11px; left: 50%; transform: translateX(-50%);
     color: var(--muted); font: 500 .68rem var(--sans); z-index: 30;
     letter-spacing: .08em; text-transform: uppercase; }
 </style>
@@ -233,7 +362,7 @@ HTML = r"""<!doctype html>
 <div class="reveal"><div class="slides">
 {{SECTIONS}}
 </div></div>
-<div class="badge">auto-advance <b id="aa">on</b> &middot; toggle: A &middot; notes: S</div>
+<div class="badge"><b id="ps">ready</b> &middot; space: play/pause &middot; auto-advance <b id="aa">on</b> (A) &middot; notes: S</div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
@@ -245,29 +374,51 @@ HTML = r"""<!doctype html>
 <script>
 const deck = new Reveal({
   plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ],
-  hash: true, slideNumber: 'c/t', transition: 'fade'
+  hash: true, slideNumber: 'c/t', transition: 'fade',
+  width: 1280, height: 720, margin: 0.055,   // 16:9 canvas, scaled to the window
+  center: false,                             // top-align dense technical slides
+  minScale: 0.2, maxScale: 1.8,
+  keyboard: { 32: null }   // free space for play/pause (below)
 });
 deck.initialize().then(() => {
-  renderDiagrams();
+  initMermaid();
+  renderSlideDiagrams(deck.getCurrentSlide());
   renderMathInElement(document.querySelector('.reveal .slides'), {
     delimiters: [ {left:'$$',right:'$$',display:true}, {left:'$',right:'$',display:false} ],
     throwOnError: false
   });
 });
+// Mermaid measures html labels via layout; a diagram inside a display:none slide
+// measures as zero and dagre emits NaN transforms. So render each slide's diagrams
+// only once that slide is visible.
+deck.on('slidechanged', e => renderSlideDiagrams(e.currentSlide));
 
-function renderDiagrams(){
+function initMermaid(){
   if (!window.mermaid) return;
-  mermaid.initialize({ startOnLoad:false, theme:'base', themeVariables:{
-    fontFamily:"'Source Sans 3', system-ui, sans-serif", fontSize:'16px',
-    background:'#FFF1E5', primaryColor:'#F6E5D2', primaryTextColor:'#262A33',
-    primaryBorderColor:'#1A3F70', lineColor:'#7A736C',
-    secondaryColor:'#ECDDC5', tertiaryColor:'#FFF1E5'
+  mermaid.initialize({ startOnLoad:false, theme:'base',
+    flowchart:{ curve:'basis', htmlLabels:false, wrap:true, useMaxWidth:true, padding:12, nodeSpacing:42, rankSpacing:46 },
+    themeVariables:{
+      fontFamily:"'Source Sans 3', system-ui, sans-serif", fontSize:'15px',
+      background:'#FFF1E5', primaryColor:'#F6E5D2', primaryTextColor:'#262A33',
+      primaryBorderColor:'#1A3F70', lineColor:'#7A736C',
+      secondaryColor:'#ECDDC5', tertiaryColor:'#FFF1E5',
+      edgeLabelBackground:'#FFF1E5', clusterBkg:'#FBF4E6', clusterBorder:'#E0CFB8'
   }});
-  mermaid.run({ querySelector: '.reveal .mermaid' });
+}
+function renderSlideDiagrams(slide){
+  if (!window.mermaid || !slide) return;
+  const nodes = [...slide.querySelectorAll('.mermaid:not([data-processed])')];
+  if (!nodes.length) return;
+  // Wait for webfonts before measuring: mermaid sizes label boxes from text
+  // metrics, and measuring against a fallback font clips the loaded font's wider glyphs.
+  const fonts = (document.fonts && document.fonts.ready) || Promise.resolve();
+  fonts.then(() => mermaid.run({ nodes }));
 }
 
 const audio = new Audio();
 let autoAdvance = true;
+
+function setPS(t){ const el = document.getElementById('ps'); if(el) el.textContent = t; }
 
 function playCurrent(){
   const cur = deck.getCurrentSlide();
@@ -275,7 +426,15 @@ function playCurrent(){
   audio.pause();
   if(src){ audio.src = src; audio.currentTime = 0; audio.play().catch(()=>{}); }
 }
+function togglePause(){
+  if(!audio.src) return;                       // nothing loaded (pre-Start)
+  if(audio.paused) audio.play().catch(()=>{});
+  else audio.pause();
+}
+audio.addEventListener('play',  () => setPS('playing'));
+audio.addEventListener('pause', () => setPS('paused'));
 audio.addEventListener('ended', () => {
+  setPS('paused');
   if(autoAdvance && !deck.isLastSlide()) deck.next();
 });
 deck.on('slidechanged', playCurrent);
@@ -285,7 +444,10 @@ document.getElementById('start').addEventListener('click', (e) => {
   playCurrent();
 });
 document.addEventListener('keydown', (e) => {
-  if(e.key === 'a' || e.key === 'A'){
+  if(e.key === ' ' || e.code === 'Space'){     // play/pause
+    e.preventDefault();
+    togglePause();
+  } else if(e.key === 'a' || e.key === 'A'){    // toggle auto-advance
     autoAdvance = !autoAdvance;
     document.getElementById('aa').textContent = autoAdvance ? 'on' : 'off';
   }
