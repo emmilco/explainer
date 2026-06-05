@@ -48,9 +48,12 @@ Supported visual elements: markdown label lists, `$inline$` / `$$display$$`
 math (KaTeX), fenced ` ```python ` (etc.) code, fenced ` ```mermaid `
 diagrams, and custom SVG using the shared **visual vocabulary** (below).
 
-**Math gotcha:** the markdown pass (marked.js) strips the backslash from
-markdown-escapable punctuation — so `\%`, `\&`, `\_`, `\#` etc. inside `$…$`
-reach KaTeX as bare `%`/`&`/… and break it (a bare `%` starts a KaTeX comment).
+**Math gotcha:** the markdown pass (marked.js) strips the backslash from any
+backslash-then-punctuation — so `\%`, `\&`, `\_`, `\#` **and the LaTeX spacing
+commands `\,` `\;` `\:` `\!`** inside `$…$` reach KaTeX as bare `%`/`&`/`,`/`;`/…
+and break or mis-render (a bare `%` starts a KaTeX comment; `\,` shows as a
+literal comma). Use word-spacing commands (`\quad`, `\qquad` — backslash+letter,
+which survive) instead of `\,`/`\;`, and avoid escapable punctuation entirely.
 Avoid those chars in math; write prose as prose, not `\text{}`-stuffed display
 math. Prefer a `.viz` chart over prose-in-math anyway.
 

@@ -376,6 +376,31 @@ The housekeeping is compaction: a background process that merges SSTables togeth
 :::
 
 ---
+## The LSM read path
+
+<div class="viz wide">
+<svg viewBox="0 0 560 140">
+<defs><marker id="arrLR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<circle class="node accent" cx="42" cy="68" r="20"/><text class="lbl on-fill sm" x="42" y="68">get x</text>
+<line class="edge" x1="64" y1="68" x2="86" y2="68" marker-end="url(#arrLR)"/>
+<rect class="node good" x="88" y="48" width="92" height="40" rx="6"/><text class="lbl sm" x="134" y="68">memtable</text>
+<line class="edge" x1="182" y1="68" x2="204" y2="68" marker-end="url(#arrLR)"/>
+<rect class="node" x="206" y="48" width="92" height="40" rx="6"/><text class="lbl sm" x="252" y="68">SSTable</text><text class="cap" x="252" y="36">newest · check</text>
+<line class="edge ghost" x1="300" y1="68" x2="322" y2="68" marker-end="url(#arrLR)"/>
+<rect class="node muted m-dim" style="--d:1.2s" x="324" y="48" width="92" height="40" rx="6"/><text class="lbl sm" x="370" y="68">SSTable</text><text class="cap" x="370" y="36">bloom 0 → skip</text>
+<line class="edge" x1="418" y1="68" x2="440" y2="68" marker-end="url(#arrLR)"/>
+<rect class="node warn" x="442" y="48" width="92" height="40" rx="6"/><text class="lbl sm" x="488" y="68">found</text>
+</svg>
+</div>
+
+- check **memtable → SSTables newest-first** (newer value wins)
+- a per-segment **Bloom filter** says "definitely absent" → skip the disk read
+
+::: narration
+We saw how an LSM-tree writes — into the memtable, flushed to immutable SSTables. Reading is the other half, and it shows why the structure stays fast even with data scattered across many segments. To read a key you check the memtable first, since it holds the most recent writes; if it is not there you check the SSTables from newest to oldest, because a newer segment's value supersedes an older one. The danger is a key that does not exist, which would force you to check every segment — the slowest possible path. The Bloom filter is what prevents that. Each SSTable carries a small Bloom filter, a probabilistic set-membership structure that can say with certainty "this key is definitely not here," letting you skip that segment's disk read entirely. It never gives a false negative, only occasional false positives, so a "maybe" still costs a lookup but a "no" is free. The read path is therefore: memtable, then newest SSTable, then older ones, skipping every segment whose Bloom filter rules the key out — which is exactly what keeps reads of absent or rarely-touched keys cheap despite the log-structured layout.
+:::
+
+---
 ## B-trees: pages, splits, the WAL
 
 <div class="viz">
@@ -413,6 +438,22 @@ The second family is the B-tree, the structure behind almost every relational da
 
 ::: narration
 The rule of thumb: LSM-trees are better for write-heavy workloads, B-trees faster and more predictable for reads — but benchmarks are workload-sensitive, so test your own. B-trees scatter writes randomly across pages and write each change at least twice — to the write-ahead log and to the page — and a full page may be rewritten for a few changed bytes. LSM-trees turn writes into large sequential segment writes, which disks handle far faster, giving higher write throughput. Both suffer write amplification — bytes written to disk exceeding the logical data — but from different causes: the B-tree from its log-plus-page double write, the LSM-tree from rewriting data repeatedly during compaction. On reads, the B-tree wins predictability — one page per level — while the LSM-tree may consult several segments, mitigated by Bloom filters. And LSM segments compress better and fragment less, though a tombstoned deletion lingers until it propagates through compaction. As always: no winner, a trade-off.
+:::
+
+---
+## Decision: storage engine by workload
+
+| if your workload is… | reach for | because |
+|---|---|---|
+| **write-heavy** — ingest, logs, time-series | **LSM-tree** | sequential segment appends, high write throughput |
+| **read-latency-sensitive** — OLTP | **B-tree** | one page per level, predictable, no segment fan-out |
+| range scans / sorted access | either | both keep keys in order |
+| storage cost matters | LSM-tree | compresses better, fragments less |
+
+- starting bias: **LSM for ingest, B-tree for latency** — then benchmark *your* workload
+
+::: narration
+We compared LSM-trees and B-trees mechanism by mechanism; here is the decision boiled down. If your workload is write-heavy — high-volume ingestion, logs, time-series — reach for an LSM-tree, because it turns writes into fast sequential segment appends and sustains far higher write throughput. If you need predictable, low-latency reads, each lookup touching exactly one page per level with no chance of consulting several segments, a B-tree is the safer choice, which is why it remains the default in transactional relational databases. Both preserve key order, so both handle range scans well. And where storage cost matters, LSM-trees usually win, compressing better and fragmenting less. But the honest answer the book insists on is to benchmark your own workload, because the crossover depends on your read-write ratio, value sizes, and access skew in ways no rule of thumb captures. As a starting bias: LSM for write-amplification-sensitive ingest, B-tree for latency-sensitive transactional reads — and then measure.
 :::
 
 ---
@@ -513,6 +554,21 @@ Text formats — JSON, XML, CSV — are human-readable and ubiquitous, which mak
 :::
 
 ---
+## Decision: which encoding format?
+
+| use | when | why |
+|---|---|---|
+| **JSON / CSV** | interchange *between* organizations | human-readable, universal; agreement beats size |
+| **Avro** | big-data pipelines, dynamic schemas | smallest; schema generated from data; easy evolution |
+| **Protocol Buffers** | service RPC, typed messages | compact, code-gen, stable numeric field tags |
+
+- text for *interop*, binary+schema for *scale & evolution* — never hand-roll a format
+
+::: narration
+The formats divide cleanly by purpose. Reach for a text format — JSON or CSV — when data crosses organizational boundaries, because human-readability and universal tooling matter more than size, and you cannot assume the other side shares your schema; agreement is worth more than efficiency there. Reach for Avro in big-data pipelines and anywhere schemas are numerous or generated dynamically: it produces the most compact encoding, its schema can be generated straight from a database's structure, and its match-by-name evolution makes adding and removing fields painless across a fleet. Reach for Protocol Buffers for service-to-service RPC and typed internal messages, where you want a compact wire format, generated typed code in every language, and the discipline of stable numeric field tags. The one rule that spans all three: never hand-roll your own ad-hoc format with no schema and no evolution story — that is how you end up unable to read your own five-year-old data. Pick a schema-driven binary format for anything internal and at scale, and a text format for anything you have to hand to someone else.
+:::
+
+---
 ## Schema evolution
 
 ```mermaid
@@ -526,6 +582,23 @@ flowchart LR
 
 ::: narration
 Schemas inevitably change, and the two formats evolve differently. Protocol Buffers uses field tags: you can rename a field freely, since names aren't in the data, but you must never change or reuse a tag number. Add a field with a new tag, and old code reading new data sees an unknown tag and skips it using the embedded type annotation — forward compatible; new code reading old data finds the field missing and fills a default — backward compatible. Avro instead matches the writer's schema against the reader's schema by field name, regardless of order: a field present in the writer but not the reader is ignored, and a field the reader expects but the writer omitted is filled from a default in the reader's schema. Because Avro has no tag numbers, you can generate schemas dynamically from, say, a database's schema — its real advantage. Either way, the schema doubles as guaranteed-current documentation and lets you check compatibility before you deploy.
+:::
+
+---
+## What actually breaks a rolling upgrade
+
+| change to the schema | old code reads new (forward) | new code reads old (backward) |
+|---|---|---|
+| **add** an optional field | ✓ ignores the unknown field | ✓ default fills the gap |
+| **remove** an optional field | ✓ | ✓ |
+| **change** a field's type | ✗ misreads the bytes | ✗ |
+| **reuse / renumber** a tag | ✗ silently mismapped | ✗ |
+
+- during a rollout, old + new code coexist → you need **both** directions at once
+- only ever add/remove *optional* fields · a tag number is **permanent**
+
+::: narration
+During a rolling upgrade — the normal way to deploy without downtime — some nodes run new code while others still run old, and both read and write the same data, so you need compatibility in both directions simultaneously. The rule of thumb for what is safe falls out of that. You can always add a new optional field: old code is forward-compatible because it ignores the field it doesn't recognize, and new code is backward-compatible because it fills a default when the field is absent. You can remove an optional field for the same two reasons. What breaks is changing the meaning of an existing wire-level slot. Changing a field's data type can make old code misread the bytes. And in Protocol Buffers, reusing or renumbering a tag number is the classic disaster, because the tag is the only identity a field has on the wire — a reused tag silently maps new data onto an old meaning, with no error. The discipline is therefore strict: only ever add or remove optional fields, never repurpose an existing one, and never reuse a retired tag number. This is exactly why schema-based formats keep a permanent registry of field numbers — the schema is a contract that has to hold across every version deployed at the same instant.
 :::
 
 ---
@@ -554,6 +627,32 @@ flowchart LR
 
 ::: narration
 We now enter the largest part of the book: distributed data. The first reason to spread data across machines is replication — keeping a copy of the same data on several nodes. Three motivations: keep data geographically near users to cut latency, tolerate failures for availability, and scale out read throughput. If data never changed, replication would be trivial — just copy it once. All the difficulty lies in handling changes. There are three families of algorithm, and nearly every distributed database uses one of them: single-leader, where all writes go through one node; multi-leader, where several nodes accept writes; and leaderless, where any replica does. One caution before we start: replication is not backup. Replicas move forward in lockstep, so if you accidentally delete data, replication faithfully propagates the deletion to every copy — only a backup, a snapshot of the past, can bring it back.
+:::
+
+---
+## Replication ≠ backup
+
+<div class="viz wide">
+<svg viewBox="0 0 540 160">
+<defs><marker id="arrRB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#9D3A24"/></marker></defs>
+<line class="edge danger" x1="92" y1="64" x2="196" y2="40" marker-end="url(#arrRB)"/>
+<line class="edge danger" x1="92" y1="84" x2="196" y2="108" marker-end="url(#arrRB)"/>
+<circle class="node accent" cx="64" cy="74" r="22"/><text class="lbl on-fill sm" x="64" y="74">leader</text>
+<text class="cap" x="64" y="112" fill="#9D3A24">DELETE *</text>
+<circle class="node danger m-dim" style="--d:1.4s" cx="222" cy="40" r="18"/>
+<circle class="node danger m-dim" style="--d:1.6s" cx="222" cy="108" r="18"/>
+<text class="olbl" x="290" y="40">replica</text><text class="olbl" x="290" y="108">replica</text>
+<line class="edge ghost" x1="360" y1="74" x2="404" y2="74"/>
+<path class="store good" d="M408,46 V102 A30 10 0 0 0 468,102 V46 Z"/><ellipse class="store good" cx="438" cy="46" rx="30" ry="10"/>
+<text class="olbl" x="438" y="122">backup · last night</text>
+</svg>
+</div>
+
+- a destructive write **replicates faithfully** to every copy — nothing left to restore
+- only a frozen snapshot (or a replayable log) recovers corruption / human error
+
+::: narration
+One correction worth making loudly, because it costs companies their data. Replication keeps copies on several nodes and faithfully applies every write to all of them — which is exactly why it is not a backup. If you run a wrong migration or an application bug issues a destructive delete, replication does its job perfectly and propagates that destruction to every replica within milliseconds; no copy is left holding the old state. Replicas protect you against a machine dying, not against a mistake in the data itself. Recovering from corruption or human error requires a backup: a snapshot frozen at a point in the past, deliberately not kept in sync, so it still holds the world as it was before the bad write. Mature setups go further with point-in-time recovery — a base snapshot plus the write-ahead log — letting you restore to any moment, including the instant before the disaster. The same insight returns in the derived-data chapters: because an immutable log lets you rebuild any state by replaying it, keeping the log is itself a form of recoverability a mutable replica can never provide. Replication is for availability; backups and logs are for getting your data back.
 :::
 
 ---
@@ -637,6 +736,27 @@ With asynchronous followers, reading from a follower can return stale data — e
 :::
 
 ---
+## The three replication-lag anomalies, shown
+
+<div class="viz wide">
+<svg viewBox="0 0 580 160">
+<circle class="node accent" cx="44" cy="40" r="11"/>
+<text class="cap left" x="70" y="40"><tspan fill="#1A3F70" font-weight="600">read-your-writes</tspan>  —  you write X, reload — <tspan fill="#9D3A24" font-weight="600">your write is gone</tspan></text>
+<circle class="node accent" cx="44" cy="86" r="11"/>
+<text class="cap left" x="70" y="86"><tspan fill="#1A3F70" font-weight="600">monotonic reads</tspan>  —  read v2, read again — <tspan fill="#9D3A24" font-weight="600">v1, time ran backward</tspan></text>
+<circle class="node accent" cx="44" cy="132" r="11"/>
+<text class="cap left" x="70" y="132"><tspan fill="#1A3F70" font-weight="600">consistent prefix</tspan>  —  you see <tspan fill="#9D3A24" font-weight="600">the answer before the question</tspan></text>
+</svg>
+</div>
+
+- each is a **partial** guarantee patching one surprise — cheaper than strong consistency
+- fixes: read from leader after writing · pin to one replica · order causal writes together
+
+::: narration
+With asynchronous replication, reading from a follower can hand you stale data, and three specific surprises follow — each worth recognizing by its shape, not just its name. Read-your-writes: you submit an update, reload, and your own change is missing because the read hit a follower that hasn't caught up — it looks like the write was lost, alarming in a way generic staleness is not; the fix is to read your own data from the leader for a while after writing. Monotonic reads: you read a fresh value, then a moment later read an older one because a second query landed on a more-lagged replica, so time appears to run backward; the fix is to pin each user to one replica so they never jump to a staler one. Consistent-prefix reads: if writes happened in a causal order — a question, then its answer — a reader can see them out of order, the answer arriving before the question, because two shards lagged by different amounts; the fix is to route causally-related writes through the same partition or order them together. Each is a partial guarantee, weaker and cheaper than full strong consistency, that patches exactly one surprise. Knowing the three failure shapes is what lets you recognize which guarantee a given bug is actually asking for.
+:::
+
+---
 ## Multi-leader & local-first
 
 - a leader per region/device · writes locally, replicates async
@@ -689,6 +809,21 @@ Leaderless replication, revived by Amazon's Dynamo and used by Cassandra and Ria
 
 ::: narration
 Here's the catch that the book is careful to make: even when w plus r is greater than n, a quorum read can still return stale data. If a node holding a new value fails and is restored from an old replica, the count of up-to-date nodes drops below w. During rebalancing, nodes can disagree about which n nodes hold a key, so the read and write sets stop overlapping. A read concurrent with a write may see either value. A write that succeeded on some replicas but failed to reach w overall is not rolled back on the nodes where it landed. And with last-write-wins on real clocks, a write can be silently dropped by a node with a faster clock. So the quorum condition appears to guarantee the latest value but in practice does not. The honest framing: w and r tune the probability of reading fresh data — they are not absolute guarantees. Leaderless systems are built for use cases that tolerate eventual consistency.
+:::
+
+---
+## Decision: single-leader, multi-leader, or leaderless?
+
+| choose | when | the cost |
+|---|---|---|
+| **single-leader** | one region, want simplicity & no write conflicts — *the default* | leader is a write bottleneck + failover |
+| **multi-leader** | multi-region writes, offline / collaborative apps | conflict resolution; much weaker consistency |
+| **leaderless** | maximum availability, tunable staleness (Dynamo-style) | quorum tuning; read repair; no strong order |
+
+- start single-leader · go multi/leaderless only when geography or availability forces it
+
+::: narration
+Three replication schemes, and the choice is usually clear once you name the constraint. Single-leader is the default and the right starting point for almost everything: all writes go through one node, so there are no write conflicts to resolve and the consistency model is simple. You pay for it with a write bottleneck at the leader and the need to handle failover, but for a single-region system that is a good trade. Reach for multi-leader only when geography or disconnection forces your hand — when each region must accept writes locally to hide inter-region latency, or when every device and browser tab is effectively a leader in an offline-capable or collaborative app. The price is steep and specific: concurrent writes to different leaders conflict, you must resolve them, and you give up the ability to enforce invariants like uniqueness. Reach for leaderless — the Dynamo style — when availability is paramount and you can tolerate tunable staleness: any replica takes writes, quorums give you a consistency knob, and read repair and anti-entropy heal divergence, at the cost of no strong ordering and real operational subtlety. The decision rule: start single-leader, and move to multi-leader or leaderless only when geography or availability genuinely demands it.
 :::
 
 ---
@@ -784,6 +919,29 @@ Secondary indexes break the assumption that you know the partition key, because 
 :::
 
 ---
+## Decision: when to shard (and when not)
+
+<div class="viz wide">
+<svg viewBox="0 0 560 150">
+<defs><marker id="arrSH" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<rect class="node accent" x="30" y="56" width="150" height="40" rx="7"/><text class="lbl on-fill sm" x="105" y="76">scaling pressure?</text>
+<line class="edge" x1="182" y1="66" x2="250" y2="44" marker-end="url(#arrSH)"/><text class="cap" x="216" y="36">reads</text>
+<line class="edge" x1="182" y1="86" x2="250" y2="110" marker-end="url(#arrSH)"/><text class="cap" x="210" y="122">data / writes</text>
+<rect class="node good" x="252" y="26" width="150" height="36" rx="6"/><text class="lbl sm" x="327" y="44">add read replicas</text>
+<rect class="node warn" x="252" y="96" width="150" height="36" rx="6"/><text class="lbl sm" x="327" y="114">shard (last resort)</text>
+<text class="olbl" x="470" y="44">cheap</text>
+<text class="olbl" x="478" y="114">heavyweight</text>
+</svg>
+</div>
+
+- more **reads** → replicas, *not* shards · shard only past one node's **data/write** ceiling
+- partition key is **hard to change** — pick for even load + your main access path
+
+::: narration
+Sharding is the heaviest tool in the replication-and-partitioning toolbox, so the first decision is whether you need it at all. The most common mistake is sharding to handle read load — if you only need more read throughput, you add read replicas, which is far cheaper and keeps a single, simple write path. You shard only when the data volume or the write throughput genuinely exceeds what one node, even a big one, can hold or sustain. And when you do, the partition key is the decision that haunts you, because it is painful to change later: choose it to spread both data and load evenly, and to keep your most important queries on a single shard, since anything that has to scatter across shards — a join, a secondary-index lookup that does not know the key, a write spanning shards needing a distributed transaction — is slow and complex. So the rule is: add replicas for reads, shard only when data or write volume forces it, choose the partition key for even load and your dominant access pattern, and keep cross-shard operations out of the hot path. Sharding well is mostly about not needing to cross shards.
+:::
+
+---
 ## Transactions: why, and ACID
 
 - group reads+writes into one unit: **commit or abort**, then retry
@@ -826,6 +984,28 @@ The next level up fixes a problem read committed allows: read skew, also called 
 :::
 
 ---
+## How MVCC actually works
+
+<div class="viz wide">
+<svg viewBox="0 0 540 150">
+<defs><marker id="arrMV" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<text class="tag" x="160" y="14">VERSIONS OF KEY x</text>
+<rect class="node good" x="60" y="40" width="118" height="40" rx="6"/><text class="lbl" x="119" y="60">v = 1</text><text class="cap" x="119" y="98">committed @ txn 3</text>
+<rect class="node muted" x="206" y="40" width="118" height="40" rx="6"/><text class="lbl" x="265" y="60">v = 2</text><text class="cap" x="265" y="98">in-flight @ txn 8</text>
+<circle class="node accent" cx="440" cy="60" r="24"/><text class="lbl on-fill sm" x="440" y="60">reader</text><text class="cap" x="440" y="98">snapshot @ txn 5</text>
+<line class="edge accent" x1="414" y1="60" x2="182" y2="60" marker-end="url(#arrMV)"/>
+<line class="edge ghost" x1="414" y1="68" x2="328" y2="68"/>
+</svg>
+</div>
+
+- each txn reads a **snapshot** = state committed before it began
+- update = delete old + insert new · **readers never block writers** · old versions GC'd
+
+::: narration
+Snapshot isolation says every transaction sees a consistent picture of the database as of the moment it began, and the mechanism that delivers it is multi-version concurrency control. Instead of overwriting a row, the database keeps several committed versions of it side by side, each tagged with the ID of the transaction that created it; an update is implemented as a delete of the old version plus an insert of a new one. When a transaction starts it is handed a snapshot — essentially the set of transaction IDs that had already committed at that instant. Reading a row then follows one visibility rule: show the most recent version that was committed before this transaction's snapshot, and ignore both versions still in flight and versions created by transactions that started later. In the picture, a reader whose snapshot is transaction five sees the value committed by transaction three and is entirely unaware of transaction eight's in-flight update. Two consequences fall out. Readers never block writers and writers never block readers, because they touch different versions rather than contending for one row. And old versions accumulate, so a background process garbage-collects any version no live snapshot can still see. This is the engine under PostgreSQL's MVCC, and it is why a long analytical query can scan a consistent snapshot without ever freezing the live write workload.
+:::
+
+---
 ## Lost updates & write skew
 
 <div class="viz">
@@ -860,6 +1040,22 @@ Here is the table that ties the isolation levels together — the single most us
 :::
 
 ---
+## Decision: which isolation level?
+
+| level | stops | still allows | cost |
+|---|---|---|---|
+| **read committed** | dirty read & write | read skew · lost update · write skew | cheap — common default |
+| **snapshot (RC)** | + read skew | lost update~ · write skew | cheap (MVCC) |
+| **serializable** | **everything** | — | serial · 2PL · **SSI** |
+
+- pick the **weakest level that rules out the anomaly you actually have**
+- write skew / phantoms → only serializable will save you
+
+::: narration
+Isolation is a dial, and the engineering decision is to turn it exactly as far as the workload requires and no further, because stronger isolation costs throughput. Read committed, the common default, stops dirty reads and dirty writes — you never see or overwrite uncommitted data — but it still allows read skew, lost updates, and write skew. Snapshot isolation adds a consistent snapshot per transaction, which eliminates read skew, and most implementations catch lost updates too, but it still permits write skew, where two transactions each check a premise, both proceed, and jointly break it. Serializable isolation stops everything, at the cost of either serial execution, two-phase locking, or serializable snapshot isolation. The decision rule is simple to state and easy to get wrong: choose the weakest level that rules out the specific anomaly your application can actually suffer. If your transactions never have a read-then-write race or a cross-row invariant, read committed is fine. The moment you have write skew or phantoms — a constraint enforced across rows, like "at least one doctor on call" or "this username is unique" — nothing below serializable will save you, and you should reach for it deliberately rather than discover the violation in production.
+:::
+
+---
 ## Implementing serializability
 
 - **serial execution** — one thread, stored procedures, shard (VoltDB)
@@ -868,6 +1064,33 @@ Here is the table that ties the isolation levels together — the single most us
 
 ::: narration
 There are three ways to actually achieve serializability. Actual serial execution removes concurrency entirely: run one transaction at a time on a single thread, which became feasible once RAM grew large enough to hold the dataset and transactions were kept short. It requires submitting transactions as stored procedures rather than interactively, and scales beyond one core only by sharding — VoltDB works this way, though cross-shard transactions are slow. Two-phase locking, 2PL, was the standard for decades: it's pessimistic, taking shared and exclusive locks so that writers block readers and readers block writers — the inverse of snapshot isolation — which makes it correct but slow, with unpredictable latency under contention. Serializable snapshot isolation, SSI, is the modern approach, used by PostgreSQL's serializable level and CockroachDB: it's optimistic, letting transactions run without blocking and then, at commit time, checking whether anyone acted on a premise that another transaction invalidated — a tripwire — and aborting the loser. No blocking, predictable latency, but it degrades under high contention.
+:::
+
+---
+## SSI: optimistic serializability
+
+<div class="viz wide">
+<svg viewBox="0 0 540 162">
+<defs><marker id="arrSSI" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<rect class="node" x="34" y="32" width="146" height="38" rx="6"/><text class="lbl sm" x="107" y="51">T1 · read, write</text>
+<rect class="node" x="34" y="96" width="146" height="38" rx="6"/><text class="lbl sm" x="107" y="115">T2 · read, write</text>
+<line class="edge" x1="182" y1="51" x2="234" y2="72" marker-end="url(#arrSSI)"/>
+<line class="edge" x1="182" y1="115" x2="234" y2="92" marker-end="url(#arrSSI)"/>
+<rect class="node warn" x="236" y="62" width="112" height="40" rx="6"/><text class="lbl sm" x="292" y="82">commit check</text>
+<line class="edge" x1="350" y1="74" x2="404" y2="55" marker-end="url(#arrSSI)"/>
+<line class="edge" x1="350" y1="90" x2="404" y2="112" marker-end="url(#arrSSI)"/>
+<circle class="node good" cx="430" cy="52" r="18"/><text class="lbl on-fill sm" x="430" y="52">T1 ✓</text>
+<circle class="node danger" cx="430" cy="116" r="18"/><text class="lbl on-fill sm" x="430" y="116">T2 ✗</text>
+<path class="edge ghost" fill="none" d="M430,134 C430,152 107,152 107,138" marker-end="url(#arrSSI)"/>
+<text class="cap" x="270" y="150">abort + retry T2</text>
+</svg>
+</div>
+
+- run concurrently, **no locks** (like snapshot isolation) on per-txn snapshots
+- detect a read-write conflict **at commit** → abort & retry · scales when contention is low
+
+::: narration
+True serializable isolation prevents every anomaly, including write skew — the question is how to get it without destroying performance. There are three implementations. Actual serial execution literally runs transactions one at a time on a single thread, viable now that memory is large and used by VoltDB and Redis, but it demands short stored-procedure transactions and caps throughput at one core. Two-phase locking is the classic answer: take a shared lock to read, an exclusive lock to write, hold them to commit, and let readers and writers block each other — correct but slow, deadlock-prone, and pessimistic, assuming conflict and preventing it up front. The modern default is serializable snapshot isolation, and it is optimistic. Transactions run concurrently with no locks at all, exactly as under snapshot isolation, each on its own snapshot. The database tracks what each one read and wrote, and only at commit time checks whether the premise a transaction relied on — the data it read — was changed by another transaction that committed in the meantime. If so, that is a serialization conflict, and one transaction is aborted and retried. The bet is that conflicts are rare, so most transactions commit without ever blocking, and SSI pays the cost only when contention is real — which is why it scales far better than two-phase locking on normal workloads. The price is the wasted work of aborted transactions and the need for the application to be willing to retry.
 :::
 
 ---
@@ -1053,6 +1276,27 @@ This connects surprisingly to how you generate IDs. A single-node autoincrement 
 :::
 
 ---
+## Causal consistency: the cheaper "almost-linearizable"
+
+<div class="viz wide">
+<svg viewBox="0 0 540 150">
+<rect class="node muted" x="40" y="50" width="120" height="44" rx="6"/><text class="lbl sm" x="100" y="72">eventual</text>
+<rect class="node accent" x="200" y="44" width="132" height="54" rx="7"/><text class="lbl on-fill" x="266" y="72">causal</text>
+<rect class="node warn" x="372" y="50" width="128" height="44" rx="6"/><text class="lbl sm" x="436" y="72">linearizable</text>
+<line class="axis" x1="40" y1="120" x2="500" y2="120"/>
+<text class="cap" x="100" y="138">weaker</text><text class="cap" x="436" y="138">stronger · costlier</text>
+<text class="cap" x="266" y="32">strongest model still available under a partition</text>
+</svg>
+</div>
+
+- causal preserves **cause → effect**; genuinely concurrent ops stay unordered
+- linearizable needs coordination (locks, uniqueness) · **causal survives partitions**
+
+::: narration
+Linearizability is the strongest single-object consistency — every operation appears to take effect at one instant, and once a new value is read no one ever reads the old one again — but it is expensive and, by the CAP theorem, impossible to keep while staying available during a network partition. The point the book is careful to make is that most applications do not actually need it. The next rung down is causal consistency, and it is special. It preserves the order of operations that are causally related — if B was written after seeing A, then everyone sees A before B — while leaving genuinely concurrent operations unordered. That weaker promise is still enough to rule out the confusing anomalies, like an answer appearing before its question, yet it can be maintained while remaining fully available under a partition, which linearizability cannot. In fact causal consistency is provably the strongest consistency model that stays available during a partition. It is implemented by tracking causal dependencies — version vectors, or Lamport timestamps carried with the writes they depended on — rather than by funneling everything through one coordinator. The practical lesson for an engineer: reach for linearizability only where you genuinely need it — a uniqueness constraint, a lock, leader election — and prefer causal consistency, which is cheaper and keeps working under partition, for everything else.
+:::
+
+---
 ## Consensus: the grand equivalence
 
 <div class="viz">
@@ -1078,6 +1322,30 @@ Logical clocks still can't enforce a uniqueness constraint fault-tolerantly: a n
 :::
 
 ---
+## You already use consensus — as a log
+
+<div class="viz wide">
+<svg viewBox="0 0 540 156">
+<defs><marker id="arrSMR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<path class="store accent" d="M36,50 V106 A30 10 0 0 0 96,106 V50 Z"/><ellipse class="store accent" cx="66" cy="50" rx="30" ry="10"/>
+<text class="olbl" x="66" y="126">ordered log</text>
+<line class="edge" x1="98" y1="72" x2="214" y2="40" marker-end="url(#arrSMR)"/>
+<line class="edge" x1="98" y1="78" x2="214" y2="78" marker-end="url(#arrSMR)"/>
+<line class="edge" x1="98" y1="84" x2="214" y2="116" marker-end="url(#arrSMR)"/>
+<rect class="node" x="216" y="24" width="180" height="32" rx="6"/><text class="lbl mono sm" x="306" y="40">replica · apply 1·2·3</text>
+<rect class="node" x="216" y="62" width="180" height="32" rx="6"/><text class="lbl mono sm" x="306" y="78">replica · apply 1·2·3</text>
+<rect class="node" x="216" y="100" width="180" height="32" rx="6"/><text class="lbl mono sm" x="306" y="116">replica · apply 1·2·3</text>
+</svg>
+</div>
+
+- total-order broadcast = a **replicated log** = consensus
+- same writes, same order, every replica → **state-machine replication** (ZK, etcd, Kafka, Raft)
+
+::: narration
+The grand equivalence said single-value consensus, atomic compare-and-set, atomic commit, and total-order broadcast are all the same problem. The most useful face of that, for a working engineer, is total-order broadcast — because it is just a replicated log: a way to deliver the same sequence of messages to every node, in the same order, with none lost. And if every replica starts from the same state and applies the same writes in the same order, they stay identical. That is state-machine replication, and it is the principle under replicated databases, event sourcing, and consensus systems alike. So you rarely invoke consensus as such; you use a system that hands you an ordered, replicated log and let it do the agreeing. ZooKeeper and etcd expose exactly this — a small, strongly-ordered log you can append to and watch. Kafka's partitions are ordered logs, with a consensus protocol electing the leader that owns each one. And Raft is literally an algorithm for keeping a replicated log consistent. The takeaway is freeing: you almost never implement consensus, you consume it, and the shape it arrives in is an append-only log whose order everyone agrees on. Learn to recognize that shape and you can see exactly where consensus is already carrying the weight in your own stack.
+:::
+
+---
 ## How consensus works (and ≠ 2PC)
 
 - **epoch numbers**: at most one leader per epoch; higher epoch wins
@@ -1089,6 +1357,36 @@ Consensus algorithms — Raft, Paxos, Zab, Viewstamped Replication — are essen
 :::
 
 ---
+## Why 2PC blocks but consensus doesn't
+
+<div class="viz wide">
+<svg viewBox="0 0 560 168">
+<text class="tag" x="132" y="14">2PC — BLOCKS</text>
+<line class="edge" x1="120" y1="66" x2="86" y2="100" marker-end="url(#arr2P)"/>
+<line class="edge" x1="144" y1="66" x2="178" y2="100" marker-end="url(#arr2P)"/>
+<defs><marker id="arr2P" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<circle class="node muted m-dim" style="--d:1.4s" cx="132" cy="50" r="20"/>
+<line class="x-mark" x1="121" y1="39" x2="143" y2="61"/><line class="x-mark" x1="143" y1="39" x2="121" y2="61"/>
+<circle class="node warn" cx="80" cy="116" r="18"/><circle class="node warn" cx="184" cy="116" r="18"/>
+<text class="cap" x="132" y="150">1 coordinator · needs <tspan font-weight="600">all</tspan> yes → stuck</text>
+<line class="edge ghost" x1="290" y1="20" x2="290" y2="152"/>
+<text class="tag" x="430" y="14">CONSENSUS — SURVIVES</text>
+<circle class="node muted m-dim" style="--d:1.4s" cx="388" cy="50" r="20"/>
+<line class="x-mark" x1="377" y1="39" x2="399" y2="61"/><line class="x-mark" x1="399" y1="39" x2="377" y2="61"/>
+<line class="edge good" x1="436" y1="116" x2="500" y2="116"/>
+<circle class="node good" cx="436" cy="116" r="18"/><circle class="node good" cx="500" cy="116" r="18"/>
+<text class="cap" x="466" y="150">any node · <tspan font-weight="600">majority</tspan> quorum → proceeds</text>
+</svg>
+</div>
+
+- 2PC: one coordinator, **all** must say yes — its crash freezes everyone
+- consensus: any node proposes, a **quorum** decides — a minority can fail and it carries on
+
+::: narration
+This looks like two-phase commit but behaves in the opposite way, and the difference is the whole reason consensus is fault-tolerant. In 2PC there is a single coordinator, and to commit it needs a yes from every participant; if the coordinator crashes at the wrong moment, the participants that already voted yes are stuck in doubt, holding their locks, unable to commit or abort until it recovers — one node's failure freezes the system. A consensus algorithm like Raft or Paxos replaces "one coordinator, all must agree" with "any node may propose, a majority must agree." Because it needs only a quorum — a strict majority — it tolerates the failure of a minority of nodes: if the leader dies, the remaining majority simply elects a new one with a higher epoch and carries on, with no one left blocked. The two overlapping quorums, one to elect a leader and one to commit each entry, guarantee a committed decision can never be lost or contradicted by a later leader. So the operational contrast is stark: 2PC has a single point of failure and blocks on it, while consensus has no single point of failure and makes progress as long as a majority is alive. That is precisely why you build leader election and fault-tolerant agreement on consensus, and why 2PC is confined to the narrower job of cross-system atomic commit, tolerated there despite its blocking nature.
+:::
+
+---
 ## Coordination services
 
 - ZooKeeper / etcd / Consul — consensus you don't write yourself
@@ -1097,6 +1395,27 @@ Consensus algorithms — Raft, Paxos, Zab, Viewstamped Replication — are essen
 
 ::: narration
 Because consensus is hard to implement correctly, you rarely write it yourself — you use a coordination service: ZooKeeper, etcd, or Consul, modeled on Google's Chubby. These hold a small amount of slow-changing data in memory, replicated by a built-in consensus algorithm, and package the useful operations on top: fault-tolerant locks and leases via atomic compare-and-set; fencing tokens, the ever-increasing IDs ZooKeeper calls zxids, to stop zombies; failure detection through client sessions and heartbeats, with ephemeral nodes that vanish when a client dies; and change notifications so clients learn of membership changes without polling. The pattern is to outsource consensus to a fixed set of three or five nodes, which then coordinate thousands of others — assigning shards to nodes, electing leaders, managing configuration. Kubernetes stores all its cluster state in etcd this way. Service discovery, though, often doesn't need consensus at all — it prizes availability over linearizability, so a cache with a TTL, DNS-style, is usually the better fit.
+:::
+
+---
+## Decision: do you actually need linearizability?
+
+<div class="viz wide">
+<svg viewBox="0 0 560 150">
+<defs><marker id="arrLZ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<rect class="node accent" x="24" y="54" width="186" height="44" rx="7"/><text class="lbl on-fill sm" x="117" y="76">lock · uniqueness · leader?</text>
+<line class="edge" x1="212" y1="64" x2="280" y2="44" marker-end="url(#arrLZ)"/><text class="cap" x="246" y="34">yes</text>
+<line class="edge" x1="212" y1="88" x2="280" y2="112" marker-end="url(#arrLZ)"/><text class="cap" x="246" y="124">no</text>
+<rect class="node warn" x="282" y="26" width="200" height="36" rx="6"/><text class="lbl sm" x="382" y="44">linearizable → coordination svc</text>
+<rect class="node good" x="282" y="96" width="200" height="36" rx="6"/><text class="lbl sm" x="382" y="114">causal / eventual — cheaper</text>
+</svg>
+</div>
+
+- **yes**: a lock/lease · a uniqueness constraint · leader election → ZooKeeper / etcd
+- **no** (most reads & writes): prefer causal/eventual — available under partition, lower latency
+
+::: narration
+Linearizability is the most expensive consistency guarantee, so the decision is to spend it only where you genuinely need it. You need it for a small set of operations that depend on a single, up-to-the-instant value being agreed across nodes: a distributed lock or lease, where two holders would be a disaster; a uniqueness constraint, like a username or an account number that must be claimed exactly once; and leader election or any other case of agreeing on one current truth. For those, do not invent it yourself — get it from a coordination service like ZooKeeper or etcd, which provides linearizable operations backed by consensus. For everything else, which is the overwhelming majority of reads and writes, you do not need it, and paying for it costs you latency and, under a network partition, availability — the CAP tax. Prefer causal consistency, which preserves cause-and-effect order, rules out the confusing anomalies, stays available during a partition, and is markedly cheaper. The senior-engineer instinct the book is cultivating is to treat linearizability as a scarce, deliberately-requested resource for locks, uniqueness, and leadership — and to reach for weaker, partition-tolerant consistency by default.
 :::
 
 ---
@@ -1127,6 +1446,109 @@ The last part of the book covers derived data — building search indexes, cache
 :::
 
 ---
+## The Unix philosophy of data
+
+<div class="viz wide">
+<svg viewBox="0 0 560 140">
+<defs><marker id="arrUX" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<path class="store" d="M28,46 V104 A30 10 0 0 0 88,104 V46 Z"/><ellipse class="store" cx="58" cy="46" rx="30" ry="10"/>
+<text class="olbl" x="58" y="124">log</text>
+<line class="edge" x1="92" y1="78" x2="150" y2="78" marker-end="url(#arrUX)"/>
+<rect class="node" x="152" y="58" width="90" height="40" rx="6"/><text class="lbl mono" x="197" y="78">grep</text>
+<line class="edge" x1="244" y1="78" x2="288" y2="78" marker-end="url(#arrUX)"/>
+<rect class="node" x="290" y="58" width="90" height="40" rx="6"/><text class="lbl mono" x="335" y="78">sort</text>
+<line class="edge" x1="382" y1="78" x2="426" y2="78" marker-end="url(#arrUX)"/>
+<rect class="node accent" x="428" y="58" width="104" height="40" rx="6"/><text class="lbl mono on-fill" x="480" y="78">uniq -c</text>
+<circle class="token" r="5"><animateMotion dur="3.6s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.3;0.4;0.6;0.7;1" keySplines="0.65 0 0.35 1;0 0 1 1;0.65 0 0.35 1;0 0 1 1;0.65 0 0.35 1" keyPoints="0;0.33;0.33;0.66;0.66;1" path="M92,78 L197,78 L335,78 L480,78"/></circle>
+</svg>
+</div>
+
+- uniform interface — a stream of records · each tool does one thing
+- immutable inputs · no side effects → **composable, testable, re-runnable**
+
+::: narration
+Before the specific engines, the mindset — and it comes straight from Unix. A pipeline that greps a log, sorts it, and counts uniques works because of a few disciplines. Every tool speaks one uniform interface: a stream of bytes, by convention lines of text, so any tool's output feeds any other's input. Each program does one thing well and is composed with others rather than growing features. And critically, inputs are immutable — a tool reads its input and writes a fresh output, never modifying the original — with no side effects beyond that output. Those properties are exactly what make a pipeline safe to experiment with: you can rerun it, inspect any stage, and you cannot corrupt the source. Batch processing on a cluster inherits all of it. The distributed filesystem replaces the pipe, files of records are the uniform interface, and a job reads immutable input files and writes new output files. Everything else in this part of the book is this one idea scaled out: build derived data by transforming immutable inputs into fresh outputs, composably.
+:::
+
+---
+## Joins in a batch world
+
+<div class="viz wide">
+<svg viewBox="0 0 540 160">
+<defs><marker id="arrJ" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<text class="tag" x="86" y="14">EVENTS · PROFILES</text>
+<rect class="cell sel" x="44" y="28" width="34" height="26"/><rect class="cell on" x="44" y="60" width="34" height="26"/><rect class="cell hot" x="44" y="92" width="34" height="26"/>
+<rect class="cell sel" x="86" y="28" width="34" height="26"/><rect class="cell on" x="86" y="60" width="34" height="26"/><rect class="cell hot" x="86" y="92" width="34" height="26"/>
+<line class="edge" x1="150" y1="74" x2="232" y2="74" marker-end="url(#arrJ)"/>
+<text class="cap" x="191" y="60">partition + sort</text>
+<text class="tag" x="380" y="14">SAME KEY, ADJACENT</text>
+<rect class="cell sel" x="300" y="28" width="34" height="26"/><rect class="cell sel" x="342" y="28" width="34" height="26"/>
+<rect class="cell on" x="300" y="60" width="34" height="26"/><rect class="cell on" x="342" y="60" width="34" height="26"/>
+<rect class="cell hot" x="300" y="92" width="34" height="26"/><rect class="cell hot" x="342" y="92" width="34" height="26"/>
+<text class="cap" x="338" y="138">→ joined per group</text>
+</svg>
+</div>
+
+- can't random-access per record · **bring related records together**
+- sort-merge · broadcast-hash (small side) · partitioned-hash · **skew = a hot key**
+
+::: narration
+A join means combining records that share a key — every click event with the profile of the user who made it. On one machine you would look each up in an index, but over billions of records that is far too many random accesses. So the batch trick is the opposite: instead of fetching the related record for each input, you bring all records with the same key together, then join them locally. The workhorse is the sort-merge join: both datasets are mapped to emit the join key, the shuffle partitions and sorts by it, and the reducer then sees every record for a given key adjacent and joins them in one pass. When one side is small enough to fit in memory, a broadcast hash join skips the shuffle and ships that side to every node as a hash table; when both are large but already partitioned the same way, a partitioned hash join works per partition. The recurring idea is locality through partitioning and sorting. And the recurring hazard is skew: one hot key — a celebrity, a null — sends a single reducer all the work while the rest sit idle, so hot keys are detected and split out specially.
+:::
+
+---
+## Beyond MapReduce: dataflow engines
+
+<div class="viz wide">
+<svg viewBox="0 0 540 160">
+<defs><marker id="arrDF" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<line class="edge" x1="78" y1="80" x2="150" y2="52" marker-end="url(#arrDF)"/>
+<line class="edge" x1="78" y1="80" x2="150" y2="108" marker-end="url(#arrDF)"/>
+<line class="edge" x1="246" y1="52" x2="318" y2="80" marker-end="url(#arrDF)"/>
+<line class="edge" x1="246" y1="108" x2="318" y2="80" marker-end="url(#arrDF)"/>
+<line class="edge" x1="414" y1="80" x2="470" y2="80" marker-end="url(#arrDF)"/>
+<circle class="node accent" cx="56" cy="80" r="20"/><text class="lbl on-fill sm" x="56" y="80">in</text>
+<rect class="node" x="152" y="34" width="92" height="36" rx="6"/><text class="lbl sm" x="198" y="52">map</text>
+<rect class="node" x="152" y="90" width="92" height="36" rx="6"/><text class="lbl sm" x="198" y="108">filter</text>
+<rect class="node" x="320" y="62" width="94" height="36" rx="6"/><text class="lbl sm" x="367" y="80">aggregate</text>
+<circle class="node good" cx="492" cy="80" r="20"/><text class="lbl on-fill sm" x="492" y="80">out</text>
+<circle class="token" r="5"><animateMotion dur="3s" repeatCount="indefinite" calcMode="spline" keyTimes="0;0.4;0.5;0.9;1" keySplines="0.65 0 0.35 1;0 0 1 1;0.65 0 0.35 1;0 0 1 1" keyPoints="0;0.5;0.5;1;1" path="M76,80 L198,52 L367,80 L492,80"/></circle>
+</svg>
+</div>
+
+- one **DAG** of operators, not rigid map→reduce→disk
+- fused & pipelined · state in memory · recover by **recomputing lineage**
+
+::: narration
+MapReduce was robust but slow, and the reason is materialization: it writes every intermediate result to the distributed filesystem between each map-reduce step, so a workflow of ten steps writes and re-reads the whole dataset ten times, and each step waits for the previous to fully finish. Dataflow engines — Spark, Flink, Tez — fix this by modeling the entire workflow as one directed acyclic graph of operators rather than a chain of separate jobs. They are not locked into the rigid map-then-reduce shape; they fuse adjacent operators so records are pipelined straight from one to the next instead of round-tripping through disk; and they keep intermediate state in memory. Failure recovery changes too: rather than re-reading materialized intermediates, the engine recomputes just the lost partitions by replaying their lineage — the deterministic chain of operations that produced them — or restores from a periodic checkpoint. The payoff is often an order-of-magnitude speedup. The cost is that recomputation-based recovery leans on operators being deterministic and cheap to replay; when they are not, a single failure can trigger an expensive cascade of recomputation.
+:::
+
+---
+## Batch output is immutable
+
+<div class="viz wide">
+<svg viewBox="0 0 540 160">
+<defs><marker id="arrBO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<path class="store" d="M30,40 V108 A30 11 0 0 0 90,108 V40 Z"/><ellipse class="store" cx="60" cy="40" rx="30" ry="11"/>
+<text class="olbl" x="60" y="128">input (untouched)</text>
+<line class="edge" x1="94" y1="74" x2="172" y2="74" marker-end="url(#arrBO)"/>
+<rect class="node accent" x="174" y="52" width="96" height="44" rx="7"/><text class="lbl on-fill" x="222" y="74">job v2</text>
+<line class="edge" x1="272" y1="74" x2="350" y2="74" marker-end="url(#arrBO)"/>
+<path class="store good" d="M352,40 V108 A30 11 0 0 0 412,108 V40 Z"/><ellipse class="store good" cx="382" cy="40" rx="30" ry="11"/>
+<text class="olbl" x="382" y="128">fresh output</text>
+<path class="edge ghost" fill="none" d="M222,100 C222,140 60,140 60,116" marker-end="url(#arrBO)"/>
+<text class="cap" x="150" y="150">bug? fix code, rerun</text>
+</svg>
+</div>
+
+- input never mutated → a bad run harms nothing
+- **human fault tolerance** · rebuild any derived dataset by reprocessing
+
+::: narration
+The immutability of inputs and outputs is not a technicality — it is what makes the whole approach forgiving. Because a job never modifies its input, only writes a new output, a buggy run breaks nothing permanent: you fix the code and rerun, and the output is regenerated from scratch as if the bad version never happened. Kleppmann calls this human fault tolerance — the system tolerates not just crashed machines but mistaken engineers, which are far more common. The same property buys cheap experimentation: run a new version of the job beside the old one and diff the outputs before switching over. And it is what lets you rebuild any piece of derived data — a search index, a recommendation model, a cache — simply by reprocessing the inputs, which is exactly what you do when you find a bug in how a derived view was computed. This is the opposite of mutating state in place, where a wrong write is destructive and often unrecoverable. Treat derived data as a pure, repeatable function of immutable inputs and an entire class of operational disasters disappears.
+:::
+
+---
 ## Stream processing & two kinds of broker
 
 | | AMQP/JMS broker | log-based (Kafka) |
@@ -1137,6 +1559,58 @@ The last part of the book covers derived data — building search indexes, cache
 
 ::: narration
 Stream processing handles unbounded data — events that arrive gradually and never complete — by processing each event as it appears. Events flow from producers to consumers through a message broker, and there are two fundamentally different kinds. The traditional AMQP or JMS style — RabbitMQ, ActiveMQ — treats messages as transient: a message is assigned to a consumer, acknowledged, and deleted, which is great for task queues where order doesn't matter but means you can't replay. The log-based style — Kafka, Kinesis — is a hybrid of a database and a message queue: an append-only log on disk, sharded into partitions, where each message gets a monotonically increasing offset, messages are totally ordered within a partition, and consumers track their position by offset. Reading doesn't delete, so fan-out is free and you can replay history by resetting the offset — which makes the same infrastructure serve both live processing and reprocessing. The trade-off: parallelism is limited to the number of partitions, and a slow message causes head-of-line blocking.
+:::
+
+---
+## The log unifies messaging and storage
+
+<div class="viz wide">
+<svg viewBox="0 0 540 156">
+<defs><marker id="arrLOG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<text class="tag" x="186" y="14">APPEND-ONLY LOG · ONE PARTITION</text>
+<rect class="cell off" x="40" y="36" width="40" height="34"/>
+<rect class="cell off" x="82" y="36" width="40" height="34"/>
+<rect class="cell on" x="124" y="36" width="40" height="34"/>
+<rect class="cell on" x="166" y="36" width="40" height="34"/>
+<rect class="cell on" x="208" y="36" width="40" height="34"/>
+<rect class="cell sel" x="250" y="36" width="40" height="34"/>
+<rect class="cell sel" x="292" y="36" width="40" height="34"/>
+<text class="cap" x="60" y="86">0</text><text class="cap" x="102" y="86">1</text><text class="cap" x="144" y="86">2</text><text class="cap" x="186" y="86">3</text><text class="cap" x="228" y="86">4</text><text class="cap" x="270" y="86">5</text><text class="cap" x="312" y="86">6</text>
+<line class="edge" x1="384" y1="53" x2="338" y2="53" marker-end="url(#arrLOG)"/><text class="olbl" x="430" y="53">producer ▸ append</text>
+<line class="edge ghost" x1="144" y1="92" x2="144" y2="112"/><circle class="node good" cx="144" cy="120" r="8"/><text class="olbl" x="144" y="142">consumer B · 2</text>
+<line class="edge ghost" x1="270" y1="92" x2="270" y2="112"/><circle class="node accent" cx="270" cy="120" r="8"/><text class="olbl" x="290" y="142">consumer A · 5</text>
+</svg>
+</div>
+
+- offset = a **position, not a deletion** · many consumers, own pace, can replay
+- ordered *within* a partition · partition = unit of parallelism · slow msg blocks it
+
+::: narration
+The log-based broker deserves a closer look, because it quietly dissolves the line between a message queue and a database. A log is an append-only sequence of records on disk, split into partitions; every record gets a monotonically increasing offset, and order is guaranteed within a partition but not across them. Producers append to the end. A consumer reads sequentially and records its own offset — a bookmark, a position, not a deletion — so reading consumes nothing. That one change has large consequences. Many independent consumer groups can read the same log at their own pace without interfering, so fan-out to a search index, a cache, and a warehouse is free. And a consumer can replay history simply by rewinding its offset to zero, which is what makes reprocessing and bootstrapping a new derived store trivial. The partition is the unit of both parallelism and ordering: add partitions for more parallel consumers, but ordering then only holds within each one. The cost of that ordering is head-of-line blocking — one message that is slow to process stalls everything behind it in its partition — so if order does not matter, the classical per-message queue is sometimes still the better fit.
+:::
+
+---
+## Processing streams: the three uses
+
+<div class="viz wide">
+<svg viewBox="0 0 540 160">
+<defs><marker id="arrUSE" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<path class="store warn" d="M30,46 V104 A26 9 0 0 0 82,104 V46 Z"/><ellipse class="store warn" cx="56" cy="46" rx="26" ry="9"/>
+<text class="olbl" x="56" y="124">stream</text>
+<line class="edge" x1="86" y1="60" x2="196" y2="36" marker-end="url(#arrUSE)"/>
+<line class="edge" x1="86" y1="75" x2="196" y2="78" marker-end="url(#arrUSE)"/>
+<line class="edge" x1="86" y1="90" x2="196" y2="120" marker-end="url(#arrUSE)"/>
+<rect class="node" x="198" y="20" width="200" height="32" rx="6"/><text class="lbl" x="298" y="36">search for patterns (CEP)</text>
+<rect class="node" x="198" y="62" width="200" height="32" rx="6"/><text class="lbl" x="298" y="78">windowed aggregation</text>
+<rect class="node good" x="198" y="104" width="200" height="32" rx="6"/><text class="lbl" x="298" y="120">maintain a materialized view</text>
+</svg>
+</div>
+
+- a **long-lived operator holding state**, updated per event (vs batch run-to-done)
+- the hard parts are all about that state: window it · complete it · recover it
+
+::: narration
+Once events are flowing, there are three things you actually do with them. The first is complex event processing: search the stream for a pattern — a sequence like three failed logins followed by a success — and emit a match. It inverts the database: instead of running a query once over stored data, you register the query and run it continuously over data as it arrives. The second is streaming analytics: compute aggregations over windows of time — a rolling count, a moving average, a rate per minute — maintaining running state for each window. The third, and the one that ties this chapter to the rest of the book, is maintaining materialized views: keeping a derived dataset — a cache, a search index, a read model — continuously current as events arrive, which is exactly the streaming face of change data capture and event sourcing. What all three share, and what makes streaming harder than batch, is long-lived state: an operator that lives indefinitely and is updated by every event, rather than a job that runs to completion. So the genuinely hard questions are all about that state — how to bound it into windows, how to know when a window is complete, and how to recover it after a crash — which the next slides take in turn.
 :::
 
 ---
@@ -1166,6 +1640,69 @@ Streams and databases turn out to be two sides of one coin. Every database write
 :::
 
 ---
+## State and streams are dual
+
+<div class="viz">
+<svg viewBox="0 0 460 94">
+<defs><marker id="arrDUAL" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<rect class="cell on" x="40" y="30" width="30" height="30"/><rect class="cell on" x="72" y="30" width="30" height="30"/><rect class="cell sel" x="104" y="30" width="30" height="30"/><rect class="cell on" x="136" y="30" width="30" height="30"/>
+<text class="olbl" x="103" y="80">changelog</text>
+<line class="edge" x1="180" y1="45" x2="250" y2="45" marker-end="url(#arrDUAL)"/><text class="cap" x="215" y="32">fold / replay</text>
+<path class="store good" d="M272,22 V64 A33 11 0 0 0 338,64 V22 Z"/><ellipse class="store good" cx="305" cy="22" rx="33" ry="11"/>
+<text class="olbl" x="305" y="84">current state</text>
+</svg>
+</div>
+
+$$\text{state} = \int \text{changes} \qquad \text{changelog} = \frac{d(\text{state})}{dt}$$
+
+- a table is a **cache of the latest value per key** in its log
+- log compaction keeps newest-per-key → rebuild any consumer from offset 0
+
+::: narration
+The deepest idea in this part of the book is a duality between tables and streams. Take any database table — its current state, one value per key. Now take the ordered log of every write that produced it — its changelog. Either one fully determines the other. Replay the changelog from empty and you reconstruct the exact state, which is precisely what event sourcing and change data capture do; and the changelog is nothing but the sequence of changes to the state. Kleppmann states it as calculus: the current state is the integral of the change stream accumulated over time, and the change stream is the derivative of the state. This is why streams and databases are not separate worlds — a table is simply a cache of the latest value of each key in its underlying log, and you can always discard the table and rebuild it. What makes this practical at scale is log compaction: the broker keeps only the most recent value for each key and drops superseded entries, so the log stays bounded yet a brand-new consumer can still rebuild full state from offset zero. Once you see state and stream as two views of one thing, the whole architecture of derived data follows — keep the log as the source of truth, and treat every table, index, and cache as a replayable projection of it.
+:::
+
+---
+## Stream joins
+
+| join | matches | needs |
+|---|---|---|
+| **stream–stream** | two event streams within a **time window** | recent events of both sides, expired as the window passes |
+| **stream–table** | each event with a **table row** (enrichment) | a local copy of the table, kept fresh by its CDC stream |
+| **table–table** | two changing tables → a **materialized view** | re-evaluated as either side changes |
+
+- the catch is *time*: join against the table value **now**, or as-of the event?
+
+::: narration
+Joins are subtler on streams than in batch, because the data never stops — "all the records for a key" is never complete, so you are always joining against a moving target. There are three kinds. A stream-stream join matches two event streams that fall within a time window of each other — ad impressions with the clicks that follow in the next minute — and it requires state holding the recent events of both sides, expired as the window slides past. A stream-table join, by far the most common in practice, enriches each event with data from a table — tagging every click with the user's current profile — and is implemented by keeping a local copy of the table inside the stream processor, continuously updated by that table's change-data-capture stream so the enrichment always uses fresh data. A table-table join maintains a materialized view that is itself the join of two changing tables, re-evaluated whenever either side changes — a home timeline that is the join of who-you-follow and their-posts. The recurring trap is time. In a stream-table join, which version of the table do you join against — its value right now, or its value as of the event's timestamp? Choosing wrong corrupts results silently, which is exactly why event-time handling, next, is worth getting right.
+:::
+
+---
+## Exactly-once, honestly
+
+<div class="viz wide">
+<svg viewBox="0 0 540 150">
+<defs><marker id="arrEO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<rect class="cell on" x="30" y="44" width="30" height="30"/><rect class="cell sel" x="62" y="44" width="30" height="30"/><rect class="cell on" x="94" y="44" width="30" height="30"/>
+<text class="olbl" x="77" y="92">events (+ dup)</text>
+<line class="edge" x1="128" y1="59" x2="196" y2="59" marker-end="url(#arrEO)"/>
+<circle class="node accent" cx="240" cy="59" r="26"/><text class="lbl on-fill sm" x="240" y="59">dedup</text>
+<rect class="node muted" x="196" y="100" width="88" height="30" rx="5"/><text class="lbl sm" x="240" y="115">seen: a,b,c</text>
+<line class="edge ghost" x1="240" y1="86" x2="240" y2="100"/>
+<line class="edge good" x1="270" y1="55" x2="430" y2="55" marker-end="url(#arrEO)"/><text class="cap" x="350" y="44">new id → apply</text>
+<line class="x-mark" x1="296" y1="74" x2="320" y2="92"/><line class="x-mark" x1="320" y1="74" x2="296" y2="92"/><text class="cap" x="330" y="100" fill="#9D3A24">dup id → skip</text>
+<circle class="node good" cx="462" cy="55" r="22"/><text class="lbl on-fill sm" x="462" y="55">sink</text>
+</svg>
+</div>
+
+- can't get exactly-once *delivery* → aim for exactly-once **effect**
+- idempotence (unique id + dedup) **+** atomic checkpoint of state & offsets
+
+::: narration
+Everyone wants exactly-once processing, and the honest version is subtle. You cannot guarantee a message crosses a network exactly once — the acknowledgement can always be lost, forcing a retry — so at-least-once delivery, with possible duplicates, is the realistic floor. What you can guarantee is exactly-once effect, which Kleppmann calls effectively-once: even if a message is processed more than once, the result is as if it were processed exactly once. Two mechanisms get you there. The first is idempotence: make reprocessing a no-op by attaching a unique ID to each message and having the consumer remember which IDs it has applied, skipping repeats — or by using operations that are naturally idempotent, like setting a key rather than incrementing it. The second is atomic commit with checkpointing: the stream processor periodically checkpoints its state together with its input offsets, atomically, so after a crash it restarts from a consistent point and any partial work done past the last checkpoint is simply discarded and redone deterministically. Combine an idempotent sink with checkpointed offsets and you get the exactly-once semantics that Flink and Kafka advertise — not magic, just deduplication plus atomic restart.
+:::
+
+---
 ## Time is hard: event time vs processing time
 
 <div class="viz">
@@ -1189,6 +1726,118 @@ Streams and databases turn out to be two sides of one coin. Every database write
 
 ::: narration
 Reasoning about time in streams is genuinely hard. There are two clocks: event time, the timestamp embedded in the event when it occurred, and processing time, the system clock when the event is handled. Confusing them corrupts data: if a stream processor windows by processing time, then goes down for a minute and drains its backlog, it reports a huge false spike even though the true event rate was steady — the spike is an artifact of the catch-up, not the data. The book's mnemonic is the Star Wars release order versus episode order. You also can't know when a window is complete, because of straggler events delayed in the network — handled by watermarks, a signal that says no more events earlier than time t are coming, or by publishing corrections. And there are several window types — tumbling, hopping, sliding, session — and three kinds of stream join — stream-stream, stream-table enrichment via a local copy kept fresh by CDC, and table-table for materialized views. Fault tolerance aims for exactly-once, which is really effectively-once, achieved through idempotence and checkpointing.
+:::
+
+---
+## Windows & watermarks
+
+<div class="viz wide">
+<svg viewBox="0 0 540 150">
+<defs><marker id="arrWM" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#9D3A24"/></marker></defs>
+<line class="axis" x1="30" y1="96" x2="510" y2="96"/>
+<line class="edge ghost" x1="200" y1="40" x2="200" y2="104"/>
+<line class="edge ghost" x1="370" y1="40" x2="370" y2="104"/>
+<text class="cap" x="115" y="32">window 1</text><text class="cap" x="285" y="32">window 2</text><text class="cap" x="455" y="32">window 3</text>
+<circle class="node accent" cx="70" cy="96" r="5"/><circle class="node accent" cx="120" cy="96" r="5"/><circle class="node accent" cx="165" cy="96" r="5"/>
+<circle class="node accent" cx="240" cy="96" r="5"/><circle class="node accent" cx="300" cy="96" r="5"/>
+<circle class="node accent" cx="440" cy="96" r="5"/><circle class="node accent" cx="480" cy="96" r="5"/>
+<line class="edge accent" x1="392" y1="40" x2="392" y2="104" stroke-dasharray="5 4"/><text class="olbl" x="392" y="120">watermark</text>
+<circle class="node danger" cx="330" cy="130" r="6"/><line class="edge danger" x1="330" y1="122" x2="330" y2="102" marker-end="url(#arrWM)"/><text class="cap" x="330" y="148" fill="#9D3A24">straggler — window already closed</text>
+</svg>
+</div>
+
+- windows: **tumbling** · hopping · sliding · **session** (gap-bounded)
+- watermark = "no event earlier than *t* is still coming" · completeness vs latency
+
+::: narration
+Aggregating an unbounded stream means cutting it into finite windows, and there are four shapes worth knowing. A tumbling window chops time into fixed, non-overlapping blocks — counts per minute. A hopping window is fixed-length but overlapping — a five-minute count emitted every minute. A sliding window covers a fixed duration around each event continuously. And a session window groups a burst of activity bounded by gaps of inactivity, with no fixed size — a user's session. The harder problem is knowing when a window is finished. Because events can be delayed in transit, a straggler carrying an old timestamp can arrive after you have already closed and reported its window. The tool for this is a watermark: a marker threaded into the stream asserting that no event with a timestamp earlier than t will still arrive, which lets the processor finalize every window up to t. A watermark forces an unavoidable trade-off — wait longer before declaring t and you catch more stragglers but report later; advance it eagerly and you are fast but must publish corrections when a late event slips in behind it. There is no clean answer, only the explicit choice of how much completeness to trade for how much latency.
+:::
+
+---
+## Lambda → Kappa
+
+<div class="viz wide">
+<svg viewBox="0 0 540 168">
+<defs><marker id="arrLK" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#7A736C"/></marker></defs>
+<text class="tag" x="120" y="14">LAMBDA</text>
+<line class="edge" x1="52" y1="84" x2="76" y2="58" marker-end="url(#arrLK)"/>
+<line class="edge" x1="52" y1="84" x2="76" y2="116" marker-end="url(#arrLK)"/>
+<line class="edge" x1="176" y1="58" x2="198" y2="78" marker-end="url(#arrLK)"/>
+<line class="edge" x1="176" y1="116" x2="198" y2="92" marker-end="url(#arrLK)"/>
+<circle class="node accent" cx="36" cy="84" r="14"/><text class="lbl on-fill sm" x="36" y="84">in</text>
+<rect class="node" x="78" y="42" width="98" height="32" rx="6"/><text class="lbl sm" x="127" y="58">batch · accurate</text>
+<rect class="node" x="78" y="100" width="98" height="32" rx="6"/><text class="lbl sm" x="127" y="116">speed · fast</text>
+<circle class="node good" cx="216" cy="84" r="16"/><text class="lbl on-fill sm" x="216" y="84">merge</text>
+<text class="cap" x="135" y="158">two systems, two codebases</text>
+<line class="edge ghost" x1="270" y1="20" x2="270" y2="150"/>
+<text class="tag" x="430" y="14">KAPPA</text>
+<path class="store warn" d="M306,64 V104 A26 9 0 0 0 358,104 V64 Z"/><ellipse class="store warn" cx="332" cy="64" rx="26" ry="9"/>
+<text class="olbl" x="332" y="124">log</text>
+<line class="edge" x1="362" y1="84" x2="396" y2="84" marker-end="url(#arrLK)"/>
+<rect class="node" x="398" y="66" width="92" height="34" rx="6"/><text class="lbl sm" x="444" y="84">stream job</text>
+<line class="edge" x1="492" y1="84" x2="510" y2="84"/>
+<text class="cap" x="430" y="158">one system · replay the log</text>
+</svg>
+</div>
+
+- **lambda**: batch layer (accurate) + speed layer (fast), merged — *duplicated logic*
+- **kappa**: one stream system on a replayable log; reprocess = re-run from offset 0
+
+::: narration
+How do you get both the low latency of streaming and the correctness and reprocessability of batch? The first influential answer was the lambda architecture: run two parallel systems — a batch layer that recomputes accurate results from the full immutable dataset on a schedule, and a speed layer that produces approximate, low-latency results from the live stream — and merge them at read time, the batch results eventually correcting the stream's approximations. It works, but the cost is duplication: the same logic maintained twice, in two different systems, with two sets of bugs. The reaction was the kappa architecture, made possible by log-based streaming: keep only the stream system, but back it with a durable, replayable log, so reprocessing becomes simply running a second copy of the streaming job from offset zero over the retained history and switching over once it catches up. One codebase, one system, and history stays reprocessable because the log kept it. The broader trend the book describes is the convergence of batch and stream — the same engines, like Flink, and the same dataflow model handling bounded and unbounded inputs alike — until the old distinction becomes mostly a question of whether the input happens to be finite.
+:::
+
+---
+## Decision: batch, stream, or request/response?
+
+| mode | input | latency | use it for |
+|---|---|---|---|
+| **request/response** | one query | milliseconds | serve a user *now* (OLTP, APIs) |
+| **stream** | unbounded, continuous | seconds | react to events, keep views fresh |
+| **batch** | bounded, finite | minutes–hours | reprocess history, heavy analytics |
+
+- same logic, three latencies — and they're **converging** (one engine, bounded or not)
+
+::: narration
+The three processing modes differ mainly in the shape of their input and the latency you can accept, and the decision follows from those. Request-response is synchronous and interactive: a client asks, the server answers in milliseconds, blocking until it does — this is your application serving a live user, an API call, an OLTP query. Stream processing handles an unbounded input that never completes, reacting to each event as it arrives with a latency of seconds — use it to respond to events as they happen and to keep derived data, caches and search indexes and materialized views, continuously fresh. Batch processing handles a bounded, finite input, producing output from scratch with a latency of minutes to hours — use it for reprocessing the full history after a bug or a new requirement, and for heavy analytics that scan everything. The unifying insight the book closes on is that these are converging: the same dataflow model and increasingly the same engines, like Flink, handle bounded and unbounded inputs alike, so the practical question is shifting from "which system" to simply "is my input finite, and how fresh must the answer be." Pick the mode by latency tolerance and input shape, and lean on a log so you can reprocess in batch what you also serve as a stream.
+:::
+
+---
+## The trade-off cheat sheet
+
+| you want | you pay with |
+|---|---|
+| stronger **consistency** | latency + availability (the CAP tax) |
+| faster **reads** | slower / duplicated writes (denormalize, index, fan-out) |
+| faster **writes** | slower reads (LSM segments, normalized joins) |
+| horizontal **scale** | distributed-systems complexity (shard, replicate, agree) |
+| schema **flexibility** | guarantees the DB no longer enforces (schema-on-read) |
+| low **latency** | weaker freshness (async replication, caching) |
+
+- *"there are no solutions, only trade-offs"* — name what each choice gives up
+
+::: narration
+This is the book in one table, and it is the thing worth carrying out of it. Almost every decision in data systems is one of a handful of recurring trades. Stronger consistency buys correctness at the cost of latency and availability — the CAP tax, paid every time you choose linearizability over causal or eventual. Faster reads are bought with slower or duplicated writes: denormalize, add an index, fan out a timeline, and every write now does more work. Faster writes are bought back with slower reads: an LSM-tree's sequential appends mean a read may consult several segments; normalized data means a read must join. Horizontal scale buys capacity at the cost of all the distributed-systems complexity in the middle of this book — sharding, replication, consensus, partial failure. Schema flexibility on read buys agility at the cost of guarantees the database no longer enforces for you. And low latency is often bought with weaker freshness — asynchronous replication, a cache with a time-to-live. Sowell's line, which opened the book, is the through-line of every row: there are no solutions, only trade-offs. The whole job of the senior engineer is to name, for the workload in front of them, which side of each of these to buy — and to be able to say out loud what they are giving up to get it.
+:::
+
+---
+## The "what to reach for" map
+
+| the problem | reach for |
+|---|---|
+| store & retrieve by key | a storage engine — B-tree or LSM index |
+| search by another column | a secondary index (local / global) |
+| analytics over many rows | a column store + warehouse |
+| copies near users / survive a node dying | replication |
+| more data/writes than one node holds | sharding |
+| group reads+writes atomically | a transaction (at the right isolation level) |
+| agree across nodes / elect a leader | consensus (ZooKeeper · etcd · Raft) |
+| keep cache, index & warehouse in sync | CDC streaming an ordered log |
+| react to events / keep views fresh | stream processing |
+| reprocess history | a batch job / replay the log |
+
+::: narration
+A closing index — the deck as a lookup table. When you hit a real problem, this is the map from symptom to the part of the book that addresses it. Need to store and retrieve records by a key: a storage engine, a B-tree or an LSM index. Search by some other column: a secondary index, local or global. Analytics scanning huge numbers of rows: a column-oriented store in a warehouse. Keep data near users, or survive a node dying: replication, in one of its three shapes. More data or write volume than a single machine can hold: sharding. Group several reads and writes so they commit or abort together: a transaction at the weakest isolation level that rules out your anomaly. Get several nodes to agree, or elect a leader, with no single point of failure: consensus, which you consume as an ordered log from ZooKeeper, etcd, or Raft. Keep a cache, a search index, and a warehouse consistent with your database: change data capture, streaming an ordered log to each. React to events as they happen, or keep a materialized view fresh: stream processing. And reprocess all of history after a bug or a new requirement: a batch job, or replaying the log from the beginning. Every row is a chapter of the book, and recognizing which row you are standing in is most of the skill it is trying to teach.
 :::
 
 ---
