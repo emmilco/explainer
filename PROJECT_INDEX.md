@@ -1,4 +1,4 @@
-# PROJECT_INDEX — explainer (working name)
+# PROJECT_INDEX — explainer
 
 A conversation-native tool for turning an agent-authored explanation into a
 narrated slideshow: visuals render instantly in the browser, per-segment audio
@@ -7,9 +7,13 @@ durable artifact that lands in a personal library.
 
 ## Status
 
-Prototype. Stage A (synced-slideshow loop, macOS `say` voice) proven. Stage B
-(production Fish S2 Pro voice via `../philosophy-tts`) is wired and import-
-verified but not yet run or latency-measured — needs exclusive GPU access.
+In production use. Nine decks rendered across philosophy, CS, math, and ML (see
+`decks/`). The two-voice pipeline is routine: macOS `say` for fast CPU drafts,
+and Fish S2 Pro / Irons for production audio (measured ~RTF 1.2 — e.g. DDIA at
+109 min of narration). The catalog is a live lab-server app; the visual
+vocabulary and the screenshot self-review harness are in everyday use. Per
+global CLAUDE.md §9.3, all Fish (GPU) rendering is submitted to the gpu-broker —
+see **Production rendering** below.
 
 ## Structure
 
@@ -20,7 +24,7 @@ verified but not yet run or latency-measured — needs exclusive GPU access.
 | `decks/` | Source decks in the authoring format (`<name>.md`). |
 | `out/<name>/` | Rendered output: `index.html` + content-hashed `audio/seg_<hash>.mp3`. |
 | `catalog/server.py` | FastAPI catalog app (lab-server `[apps.explainers]`, port 7250). Lists every rendered explainer by title, length, and creation date; mounts `out/` at `/view` so titles link to the live deck. Length is summed only over `index.html`'s referenced audio, so it reflects the current render and never double-counts cached say/fish audio. Reachable at `https://explainers.emmilco.com` when `./lab` runs. |
-| `tools/` | Headless self-review utilities (run under a playwright-equipped python, e.g. `../ft-briefing/.venv-acquire/bin/python`). `shoot.py <deck> [slide...]` screenshots slides to `/tmp/shots/<deck>/`; `audit_overflow.py <deck>` reports per-slide horizontal/vertical overflow so layout bugs are located by measurement, not eyeballing. |
+| `tools/` | Self-review + render utilities. `shoot.py <deck> [slide...]` and `audit_overflow.py <deck>` run under a playwright-equipped python (e.g. `../ft-briefing/.venv-acquire/bin/python`): screenshots slides to `/tmp/shots/<deck>/` and reports per-slide horizontal/vertical overflow, so layout bugs are located by measurement, not eyeballing. `render_fish.sh decks/<name>.md` is the gpu-broker-conformant Fish render runner (traps stop signals → exit 42; resumable via the audio cache) — see Production rendering. |
 | `.claude/` | Project harness config. `hooks/bash-guard.sh` is a `PreToolUse` Bash guard (wired in `settings.local.json`) that flags `rm` commands for manual approval and auto-approves other bash. |
 
 ## Deck authoring format
@@ -39,10 +43,14 @@ prose compete for the same channel and clash (the redundancy effect). So:
   story. It stands alone — a listener with the screen off gets the full
   argument, and it never says "as you can see".
 - **The slide** carries only what you *look at*, not *read as prose*: a formula,
-  a code block, a diagram, a short list of concept **labels**, the one number
-  that matters. It is a visual skeleton, never a summary of the narration.
-  A terse label list ("sorted · halve · recurse") is good; a full sentence
-  ("Too big? Discard the right half.") is the thing that clashes.
+  a code block, a diagram, plus **telegraphic cues**. A terse label list
+  ("sorted · halve · recurse") is good; a full sentence ("Too big? Discard the
+  right half.") is the thing that clashes.
+- **Cue coverage:** every beat the narration makes should have a corresponding
+  terse cue on the slide (typically 4–5 cues/slide), so the listener always has
+  a visual anchor for what's being said. Under-cueing (2 sparse bullets while
+  the narration makes 5 points) loses the listener; the failure mode to avoid
+  is prose duplication, not density of cues.
 
 Supported visual elements: markdown label lists, `$inline$` / `$$display$$`
 math (KaTeX), fenced ` ```python ` (etc.) code, fenced ` ```mermaid `
@@ -93,5 +101,30 @@ overflows the right edge.
 ## Conventions
 
 - Deck files: kebab-case, e.g. `binary-search.md`.
-- Build: `python3 render.py decks/<name>.md [--tts fish]` then open
-  `out/<name>/index.html`. `--tts fish` needs exclusive GPU access.
+- Draft build (CPU, `say`): `python3 render.py decks/<name>.md`, then open
+  `out/<name>/index.html`. Iterate freely — the per-slide audio cache makes
+  re-renders near-instant, and `say` is genuinely good for math-heavy narration
+  (spelled-out symbols articulate cleanly), so a deck can ship in `say`.
+
+## Production rendering (Fish / Irons — via gpu-broker)
+
+Fish is GPU-intensive, so per global CLAUDE.md §9.3 it is **never** launched
+directly (no `python3 render.py … --tts fish` from a shell). It is submitted to
+the gpu-broker (`../gpu-broker`, lab-server app on :8970) through the conformant
+runner `tools/render_fish.sh`:
+
+```bash
+cd ~/Documents/GitHub/gpu-broker
+.venv/bin/python -m gpu_broker.cli submit \
+  --name <deck>-fish-irons --priority high --pausable --max-runtime-s 10800 \
+  --tag explainer --cmd "bash tools/render_fish.sh decks/<deck>.md" \
+  --cwd ~/Documents/GitHub/explainer
+```
+
+The runner traps `SIGUSR1`/`SIGTERM` → exit 42 (yield); resumability comes from
+render.py's per-slide audio cache (completed segments are skipped on re-run)
+with atomic mp3 writes, so a preempted job resumes cleanly. Inspect/cancel with
+`gpu_broker.cli queue` / `cancel <id>`, or the dashboard at
+`gpu-broker.emmilco.com`. On completion the deck's `index.html` flips to the
+Irons audio and the catalog length updates on next load. Confirm the daemon is
+up before submitting; the say draft needs none of this.

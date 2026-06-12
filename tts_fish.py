@@ -59,11 +59,15 @@ def main():
             print(f"[fish] seg {i}: SKIPPED ({result.get('skipped')})", flush=True)
             continue
         wav = out.with_suffix(".wav")
+        tmp = out.with_suffix(".tmp")
         sf.write(str(wav), result["audio"], result["sr"])
+        # write to a temp name, then atomic-rename: a kill mid-conversion can
+        # never leave a truncated .mp3 that the cache would treat as complete
         subprocess.run(
-            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), str(out)],
+            ["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-f", "mp3", str(tmp)],
             check=True,
         )
+        tmp.replace(out)
         wav.unlink(missing_ok=True)
         dur = result["duration_s"]
         rtf = wall / dur if dur else 0
