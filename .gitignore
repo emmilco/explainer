@@ -2,7 +2,8 @@
 # say audio re-renders instantly; Fish/Irons audio needs the GPU to reproduce.
 out/
 
-# Transient render scratch
+# Transient render scratch (GPU TTS job lists)
+**/_tts_jobs.json
 **/_fish_jobs.json
 
 # Python

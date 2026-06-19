@@ -7,24 +7,27 @@ durable artifact that lands in a personal library.
 
 ## Status
 
-In production use. Nine decks rendered across philosophy, CS, math, and ML (see
-`decks/`). The two-voice pipeline is routine: macOS `say` for fast CPU drafts,
-and Fish S2 Pro / Irons for production audio (measured ~RTF 1.2 — e.g. DDIA at
-109 min of narration). The catalog is a live lab-server app; the visual
-vocabulary and the screenshot self-review harness are in everyday use. Per
-global CLAUDE.md §9.3, all Fish (GPU) rendering is submitted to the gpu-broker —
-see **Production rendering** below.
+In production use. Ten decks rendered across philosophy, CS, math, ML, and
+healthcare IT (see `decks/`). The pipeline has two stages: macOS `say` for fast
+CPU drafts, and a GPU backend for production audio — **Higgs Audio v3 / Irons**
+is the production default (tracking the philosophy-tts standard), with **Fish
+S2 Pro / Irons** retained as a documented fallback; select via `--tts
+higgs|fish`. The catalog is a live lab-server app; the visual vocabulary and the
+screenshot self-review harness are in everyday use. Per global CLAUDE.md §9.3,
+all GPU rendering is submitted to the gpu-broker — see **Production rendering**
+below.
 
 ## Structure
 
 | Path | Purpose |
 |------|---------|
-| `render.py` | Parses a deck markdown file, synthesizes per-slide narration, emits a self-contained reveal.js slideshow. `--tts say` (default) or `--tts fish`; Fish voice via `--fish-voice irons\|fiennes` (default **irons**). Audio cache is keyed by voice. |
-| `tts_fish.py` | Fish S2 Pro narration worker. Runs under the philosophy-tts venv; reuses that project's production render path. Named voice refs (`irons` default, `fiennes`). Invoked by `render.py`, not directly. |
+| `render.py` | Parses a deck markdown file, synthesizes per-slide narration, emits a self-contained reveal.js slideshow. `--tts say` (default draft) · `--tts higgs` (production default) · `--tts fish` (fallback); GPU voice via `--gpu-voice irons\|fiennes` (default **irons**; `--fish-voice` kept as an alias). Audio cache is keyed by `tts:voice`, so backends never collide. |
+| `tts_higgs.py` | **Higgs Audio v3** narration worker (production default). Runs under philosophy-tts's `.venv-higgs`; reuses that project's `render_book_higgs` render path (sentence/clause split + `CachedHiggsRenderer` with prefix KV-cache reuse + fade/stitch). Voice names map to Higgs ref-modes (`irons`→`y2` default, `fiennes`, `rorty`). Invoked by `render.py`, not directly. |
+| `tts_fish.py` | Fish S2 Pro narration worker (fallback). Runs under the philosophy-tts venv; reuses that project's production render path. Named voice refs (`irons` default, `fiennes`). Invoked by `render.py`, not directly. |
 | `decks/` | Source decks in the authoring format (`<name>.md`). |
 | `out/<name>/` | Rendered output: `index.html` + content-hashed `audio/seg_<hash>.mp3`. |
 | `catalog/server.py` | FastAPI catalog app (lab-server `[apps.explainers]`, port 7250). Lists every rendered explainer by title, length, and creation date; mounts `out/` at `/view` so titles link to the live deck. Length is summed only over `index.html`'s referenced audio, so it reflects the current render and never double-counts cached say/fish audio. Reachable at `https://explainers.emmilco.com` when `./lab` runs. |
-| `tools/` | Self-review + render utilities. `shoot.py <deck> [slide...]` and `audit_overflow.py <deck>` run under a playwright-equipped python (e.g. `../ft-briefing/.venv-acquire/bin/python`): screenshots slides to `/tmp/shots/<deck>/` and reports per-slide horizontal/vertical overflow, so layout bugs are located by measurement, not eyeballing. `render_fish.sh decks/<name>.md` is the gpu-broker-conformant Fish render runner (traps stop signals → exit 42; resumable via the audio cache) — see Production rendering. |
+| `tools/` | Self-review + render utilities. `shoot.py <deck> [slide...]` and `audit_overflow.py <deck>` run under a playwright-equipped python (e.g. `../ft-briefing/.venv-acquire/bin/python`): screenshots slides to `/tmp/shots/<deck>/` and reports per-slide horizontal/vertical overflow, so layout bugs are located by measurement, not eyeballing. `render_higgs.sh` / `render_fish.sh decks/<name>.md` are the gpu-broker-conformant render runners (Higgs default, Fish fallback; trap stop signals → exit 42; resumable via the audio cache) — see Production rendering. |
 | `.claude/` | Project harness config. `hooks/bash-guard.sh` is a `PreToolUse` Bash guard (wired in `settings.local.json`) that flags `rm` commands for manual approval and auto-approves other bash. |
 
 ## Deck authoring format
@@ -106,25 +109,28 @@ overflows the right edge.
   re-renders near-instant, and `say` is genuinely good for math-heavy narration
   (spelled-out symbols articulate cleanly), so a deck can ship in `say`.
 
-## Production rendering (Fish / Irons — via gpu-broker)
+## Production rendering (Higgs / Irons — via gpu-broker)
 
-Fish is GPU-intensive, so per global CLAUDE.md §9.3 it is **never** launched
-directly (no `python3 render.py … --tts fish` from a shell). It is submitted to
-the gpu-broker (`../gpu-broker`, lab-server app on :8970) through the conformant
-runner `tools/render_fish.sh`:
+The GPU backends are GPU-intensive, so per global CLAUDE.md §9.3 they are
+**never** launched directly (no `python3 render.py … --tts higgs` from a shell).
+A render is submitted to the gpu-broker (`../gpu-broker`, lab-server app on
+:8970) through a conformant runner — `tools/render_higgs.sh` (production default)
+or `tools/render_fish.sh` (fallback):
 
 ```bash
 cd ~/Documents/GitHub/gpu-broker
 .venv/bin/python -m gpu_broker.cli submit \
-  --name <deck>-fish-irons --priority high --pausable --max-runtime-s 10800 \
-  --tag explainer --cmd "bash tools/render_fish.sh decks/<deck>.md" \
+  --name <deck>-higgs-irons --priority high --pausable --max-runtime-s 10800 \
+  --tag explainer --cmd "bash tools/render_higgs.sh decks/<deck>.md" \
   --cwd ~/Documents/GitHub/explainer
 ```
 
-The runner traps `SIGUSR1`/`SIGTERM` → exit 42 (yield); resumability comes from
+Each runner traps `SIGUSR1`/`SIGTERM` → exit 42 (yield); resumability comes from
 render.py's per-slide audio cache (completed segments are skipped on re-run)
-with atomic mp3 writes, so a preempted job resumes cleanly. Inspect/cancel with
-`gpu_broker.cli queue` / `cancel <id>`, or the dashboard at
-`gpu-broker.emmilco.com`. On completion the deck's `index.html` flips to the
-Irons audio and the catalog length updates on next load. Confirm the daemon is
-up before submitting; the say draft needs none of this.
+with atomic mp3 writes, so a preempted job resumes cleanly. The cache key
+includes the backend, so switching a deck between Fish and Higgs re-synthesizes
+rather than reusing stale audio. Inspect/cancel with `gpu_broker.cli queue` /
+`cancel <id>`, or the dashboard at `gpu-broker.emmilco.com`. On completion the
+deck's `index.html` flips to the Irons audio and the catalog length updates on
+next load. Confirm the daemon is up before submitting; the say draft needs none
+of this.

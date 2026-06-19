@@ -91,15 +91,28 @@ def synth(text, mp3_path, voice=None):
     aiff.unlink(missing_ok=True)
 
 
+# GPU TTS backends borrowed from philosophy-tts, each under its own venv. Higgs
+# Audio v3 is philosophy-tts's production default; Fish is the documented
+# fallback. A deck picks one via --tts; both workers share the same job protocol
+# (a [{"text","out"}, ...] file + a voice name) and atomic-write caching.
 FISH_PYTHON = "/Users/elliotmilco/Documents/GitHub/philosophy-tts/.venv/bin/python"
+HIGGS_PYTHON = "/Users/elliotmilco/Documents/GitHub/philosophy-tts/.venv-higgs/bin/python"
+
+GPU_TTS = {
+    "fish": {"python": FISH_PYTHON, "worker": "tts_fish.py"},
+    "higgs": {"python": HIGGS_PYTHON, "worker": "tts_higgs.py"},
+}
 
 
-def run_fish(jobs, out_dir, voice):
-    """Synthesize narration via the Fish worker under the philosophy-tts venv."""
-    job_file = out_dir / "_fish_jobs.json"
+def run_gpu_tts(tts, jobs, out_dir, voice):
+    """Synthesize narration via a GPU TTS worker (fish/higgs) under its venv."""
+    backend = GPU_TTS[tts]
+    job_file = out_dir / "_tts_jobs.json"
     job_file.write_text(json.dumps(jobs))
-    print(f"  fish ({voice}): synthesizing {len(jobs)} segment(s) — loading model...", flush=True)
-    subprocess.run([FISH_PYTHON, str(ROOT / "tts_fish.py"), str(job_file), voice], check=True)
+    print(f"  {tts} ({voice}): synthesizing {len(jobs)} segment(s) — loading model...", flush=True)
+    subprocess.run(
+        [backend["python"], str(ROOT / backend["worker"]), str(job_file), voice], check=True
+    )
     job_file.unlink(missing_ok=True)
 
 
@@ -119,7 +132,7 @@ def _section(visual, narration, audio_rel):
     )
 
 
-def build(deck_path, voice=None, tts="say", fish_voice="irons"):
+def build(deck_path, voice=None, tts="say", gpu_voice="irons"):
     deck_path = Path(deck_path)
     name = deck_path.stem
     out_dir = ROOT / "out" / name
@@ -128,8 +141,8 @@ def build(deck_path, voice=None, tts="say", fish_voice="irons"):
 
     title, slides = parse_deck(deck_path.read_text())
     sections = []
-    fish_jobs = []
-    voice_id = fish_voice if tts == "fish" else (voice or "default")
+    gpu_jobs = []
+    voice_id = gpu_voice if tts in GPU_TTS else (voice or "default")
     for i, s in enumerate(slides):
         audio_rel = ""
         if s["narration"]:
@@ -139,15 +152,15 @@ def build(deck_path, voice=None, tts="say", fish_voice="irons"):
             audio_rel = f"audio/seg_{digest}.mp3"
             if mp3.exists() and mp3.stat().st_size > 0:
                 print(f"  cache slide {i}", flush=True)
-            elif tts == "fish":
-                fish_jobs.append({"text": s["narration"], "out": str(mp3)})
+            elif tts in GPU_TTS:
+                gpu_jobs.append({"text": s["narration"], "out": str(mp3)})
             else:
                 print(f"  synth slide {i} ({len(s['narration'])} chars)...", flush=True)
                 synth(s["narration"], mp3, voice)
         sections.append(_section(s["visual"], s["narration"], audio_rel))
 
-    if fish_jobs:
-        run_fish(fish_jobs, out_dir, fish_voice)
+    if gpu_jobs:
+        run_gpu_tts(tts, gpu_jobs, out_dir, gpu_voice)
 
     html = HTML.replace("{{TITLE}}", title or name).replace(
         "{{SECTIONS}}", "\n".join(sections)
@@ -462,10 +475,10 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if not args:
         sys.exit("usage: python3 render.py decks/<name>.md [--voice <name>] "
-                 "[--tts say|fish] [--fish-voice irons|fiennes]")
+                 "[--tts say|fish|higgs] [--gpu-voice irons|fiennes]")
     voice = None
     tts = "say"
-    fish_voice = "irons"
+    gpu_voice = "irons"
     if "--voice" in args:
         i = args.index("--voice")
         voice = args[i + 1]
@@ -474,8 +487,11 @@ if __name__ == "__main__":
         i = args.index("--tts")
         tts = args[i + 1]
         args = args[:i] + args[i + 2:]
-    if "--fish-voice" in args:
-        i = args.index("--fish-voice")
-        fish_voice = args[i + 1]
-        args = args[:i] + args[i + 2:]
-    build(args[0], voice=voice, tts=tts, fish_voice=fish_voice)
+    # --gpu-voice is the backend-neutral name; --fish-voice kept as an alias so
+    # the existing render_fish.sh job keeps working unchanged.
+    for flag in ("--gpu-voice", "--fish-voice"):
+        if flag in args:
+            i = args.index(flag)
+            gpu_voice = args[i + 1]
+            args = args[:i] + args[i + 2:]
+    build(args[0], voice=voice, tts=tts, gpu_voice=gpu_voice)
