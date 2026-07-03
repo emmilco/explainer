@@ -26,7 +26,7 @@ below.
 | `tts_fish.py` | Fish S2 Pro narration worker (fallback). Runs under the philosophy-tts venv; reuses that project's production render path. Named voice refs (`irons` default, `fiennes`). Invoked by `render.py`, not directly. |
 | `decks/` | Source decks in the authoring format (`<name>.md`). |
 | `out/<name>/` | Rendered output: `index.html` + content-hashed `audio/seg_<hash>.mp3`. |
-| `catalog/server.py` | FastAPI catalog app (lab-server `[apps.explainers]`, port 7250). Lists every rendered explainer by title, length, and creation date; mounts `out/` at `/view` so titles link to the live deck. Length is summed only over `index.html`'s referenced audio, so it reflects the current render and never double-counts cached say/fish audio. Reachable at `https://explainers.emmilco.com` when `./lab` runs. |
+| `catalog/server.py` | FastAPI catalog app (lab-server `[apps.explainers]`, binds the Unix socket `~/.lab-sockets/explainers.sock`). Lists every rendered explainer by title, length, and creation date; mounts `out/` at `/view` so titles link to the live deck. Length is summed only over `index.html`'s referenced audio, so it reflects the current render and never double-counts cached say/fish audio. Reachable at `https://explainers.emmilco.com` via the lab auth gateway when `./lab` runs. |
 | `tools/` | Self-review + render utilities. `shoot.py <deck> [slide...]` and `audit_overflow.py <deck>` run under a playwright-equipped python (e.g. `../ft-briefing/.venv-acquire/bin/python`): screenshots slides to `/tmp/shots/<deck>/` and reports per-slide horizontal/vertical overflow, so layout bugs are located by measurement, not eyeballing. `render_higgs.sh` / `render_fish.sh decks/<name>.md` are the gpu-broker-conformant render runners (Higgs default, Fish fallback; trap stop signals → exit 42; resumable via the audio cache) — see Production rendering. |
 | `.claude/` | Project harness config. `hooks/bash-guard.sh` is a `PreToolUse` Bash guard (wired in `settings.local.json`) that flags `rm` commands for manual approval and auto-approves other bash. |
 
@@ -113,8 +113,8 @@ overflows the right edge.
 
 The GPU backends are GPU-intensive, so per global CLAUDE.md §9.3 they are
 **never** launched directly (no `python3 render.py … --tts higgs` from a shell).
-A render is submitted to the gpu-broker (`../gpu-broker`, lab-server app on
-:8970) through a conformant runner — `tools/render_higgs.sh` (production default)
+A render is submitted to the gpu-broker (`../gpu-broker`, a lab-server app
+binding `~/.lab-sockets/gpu-broker.sock` — no TCP port) through a conformant runner — `tools/render_higgs.sh` (production default)
 or `tools/render_fish.sh` (fallback):
 
 ```bash
