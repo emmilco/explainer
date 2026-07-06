@@ -209,8 +209,42 @@ HTML = r"""<!doctype html>
   .reveal { font-family: var(--sans); color: var(--ink); font-size: 30px; line-height: 1.5;
     -webkit-font-smoothing: antialiased; }
   .reveal .slides { text-align: left; }
-  .reveal .slides section { text-align: left; padding: 3.4% 5.4% 2.4%; }
+  .reveal .slides section { text-align: left; padding: 3.4% 5.4% 2.4%;
+    box-sizing: border-box; }   /* padding inside the 1280px canvas, not added to it */
   .reveal .slides section > * { max-width: 100%; }            /* hard overflow guard */
+
+  /* ——— slide registers (opt-in: <!-- .slide: class="divider" --> as the slide's first line) ——— */
+  .reveal .slides section.divider, .reveal .slides section.statement { height: 100%; }
+  /* !important: reveal asserts display on the visible slide, so an equal-specificity
+     flex declaration loses; scope to .present so hidden slides stay hidden */
+  .reveal .slides section.present.divider, .reveal .slides section.present.statement {
+    display: flex !important; flex-direction: column; justify-content: center; }
+  .reveal .slides section.divider h2 { border: none; color: var(--paper);
+    font-size: 2.5em; margin: 0; }
+  .reveal .slides section.divider h3 { font-family: var(--sans); color: var(--info-soft);
+    font-size: .68em; font-weight: 600; text-transform: uppercase; letter-spacing: .16em;
+    margin: 0 0 var(--sp-4); }
+  .reveal .slides section.divider p, .reveal .slides section.divider li { color: var(--paper-deep); }
+  .reveal .slides section.divider strong { color: var(--warn-soft); }
+  html:has(.reveal .slides section.present.divider),
+  html:has(.reveal .slides section.present.divider) body,
+  html:has(.reveal .slides section.present.divider) .reveal,
+  html:has(.reveal .slides section.present.divider) .reveal-viewport { background: var(--info); }
+  html:has(.reveal .slides section.present.divider) .reveal .slide-number,
+  html:has(.reveal .slides section.present.divider) .badge { color: var(--info-soft); }
+  html:has(.reveal .slides section.present.divider) .reveal .controls { color: var(--paper); }
+  html, body, .reveal-viewport { transition: background-color .4s; }
+  .reveal .slides section.statement { align-items: center; text-align: center; }
+  .reveal .slides section.statement p { font-family: var(--serif); font-size: 1.55em;
+    line-height: 1.35; max-width: 26ch; margin: 0; }
+  .reveal .slides section.statement h2 { border: none; }
+  /* compact — density escape hatch for a slide that measures too tall; shrinks
+     text (viz/mermaid labels are fixed-px and unaffected) and caps diagram height */
+  .reveal .slides section.compact { font-size: 26px; }
+  .reveal .slides section.compact .viz svg { max-height: 34vh; }
+  .reveal .slides section.compact .mermaid svg { max-height: 36vh; }
+  .reveal .slides section.compact li { margin: .35em 0; }
+  .reveal .slides section.compact .katex-display { font-size: 1em; margin: var(--sp-2) 0; }
 
   /* ——— headings ——— */
   .reveal h1, .reveal h2, .reveal h3 {
@@ -237,7 +271,8 @@ HTML = r"""<!doctype html>
   /* ——— code (contained, never overflows the slide) ——— */
   .reveal code { font-family: var(--mono); font-size: .92em;
     background: var(--paper-deep); padding: .05em .3em; border-radius: 4px; }
-  .reveal pre { width: 100%; box-shadow: none; margin: var(--sp-3) 0; font-size: .5em; }
+  .reveal pre { width: fit-content; max-width: 100%; box-shadow: none;
+    margin: var(--sp-3) 0; font-size: .55em; }   /* short snippets sit compact, not banner-wide */
   .reveal pre code, .reveal pre code.hljs {
     font-family: var(--mono); background: var(--paper-deep); color: var(--ink);
     border: 1px solid var(--rule); border-radius: 8px; padding: .9em 1.1em;
@@ -311,6 +346,19 @@ HTML = r"""<!doctype html>
   .viz .cap { fill: var(--muted); font-size: 12.5px; text-anchor: middle; letter-spacing: .03em; }
   .viz .tag { fill: var(--muted); font-size: 11px; text-anchor: middle;
     text-transform: uppercase; letter-spacing: .09em; }
+  /* text color roles — semantic color on captions/labels/tags (no raw hex in decks) */
+  .viz .cap.accent, .viz .lbl.accent, .viz .tag.accent { fill: var(--info); }
+  .viz .cap.good,   .viz .lbl.good,   .viz .tag.good   { fill: var(--pos); }
+  .viz .cap.warn,   .viz .lbl.warn,   .viz .tag.warn   { fill: var(--warn); }
+  .viz .cap.danger, .viz .lbl.danger, .viz .tag.danger { fill: var(--neg); }
+  .viz .cap.plum,   .viz .lbl.plum,   .viz .tag.plum   { fill: var(--plum); }
+  /* region — translucent set/area (Venn circles, highlighted zones); overlaps blend */
+  .viz .region { fill: var(--info-soft); fill-opacity: .5; stroke: var(--info);
+    stroke-width: var(--stroke-reg); }
+  .viz .region.good   { fill: var(--pos-soft);  stroke: var(--pos); }
+  .viz .region.warn   { fill: var(--warn-soft); stroke: var(--warn); }
+  .viz .region.danger { fill: var(--neg-soft);  stroke: var(--neg); }
+  .viz .region.plum   { fill: var(--plum-soft); stroke: var(--plum); }
   /* bars & quantities */
   .viz .bar { fill: var(--info); }
   .viz .bar.good{fill:var(--pos);} .viz .bar.warn{fill:var(--warn);}
@@ -360,18 +408,37 @@ HTML = r"""<!doctype html>
     right: auto; left: 14px; bottom: 13px; top: auto; }
   .reveal .controls { color: var(--ink); }
   .reveal .controls button { animation: none !important; }
+  .reveal .progress { color: var(--info); height: 3px;
+    background: rgba(185,167,138,.25); }
+  /* cover — the start overlay doubles as the deck's title card */
   #start { position: fixed; inset: 0; background: var(--paper);
-    display: flex; align-items: center; justify-content: center; z-index: 1000; cursor: pointer; }
-  #start span { font-family: var(--serif); color: var(--ink);
-    font-size: 1.5rem; font-weight: 600; padding: .7rem 2rem;
-    border: 1px solid var(--ink); border-radius: 4px; letter-spacing: .01em; }
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.05rem; z-index: 1000; cursor: pointer; text-align: center; }
+  #start:focus-visible { outline: 3px solid var(--info); outline-offset: -3px; }
+  #start .eyebrow { font: 600 .72rem var(--sans); color: var(--muted);
+    text-transform: uppercase; letter-spacing: .18em; }
+  #start .cover-title { font-family: var(--serif); font-weight: 600; color: var(--ink);
+    font-size: clamp(2rem, 5.2vw, 3.6rem); line-height: 1.08; letter-spacing: -.012em;
+    max-width: 22ch; padding: 0 1rem; }
+  #start .cover-rule { width: 54px; border-top: 1px solid var(--rule-strong); margin: .3rem 0; }
+  #start .meta { font: 500 .85rem var(--sans); color: var(--muted); letter-spacing: .04em; }
+  #start .btn { margin-top: 1.15rem; font: 600 1.05rem var(--sans); color: var(--paper);
+    background: var(--info); padding: .65rem 2.4rem; border-radius: 4px; letter-spacing: .02em; }
   .badge { position: fixed; bottom: 11px; left: 50%; transform: translateX(-50%);
     color: var(--muted); font: 500 .68rem var(--sans); z-index: 30;
-    letter-spacing: .08em; text-transform: uppercase; }
+    letter-spacing: .08em; text-transform: uppercase; transition: opacity .6s; }
+  .badge.dim { opacity: .12; }
+  .badge.dim:hover { opacity: 1; }
 </style>
 </head>
 <body>
-<div id="start"><span>&#9654;&nbsp;&nbsp;Start</span></div>
+<div id="start" role="button" tabindex="0" aria-label="Start narrated slideshow">
+  <div class="eyebrow">Narrated explainer</div>
+  <div class="cover-title">{{TITLE}}</div>
+  <div class="cover-rule"></div>
+  <div class="meta" id="cover-meta"></div>
+  <span class="btn">&#9654;&nbsp;&nbsp;Start</span>
+</div>
 <div class="reveal"><div class="slides">
 {{SECTIONS}}
 </div></div>
@@ -394,6 +461,8 @@ const deck = new Reveal({
   keyboard: { 32: null }   // free space for play/pause (below)
 });
 deck.initialize().then(() => {
+  const n = document.querySelectorAll('.reveal .slides > section').length;
+  document.getElementById('cover-meta').textContent = n + ' slides · audio narration';
   initMermaid();
   renderSlideDiagrams(deck.getCurrentSlide());
   renderMathInElement(document.querySelector('.reveal .slides'), {
@@ -444,7 +513,13 @@ function togglePause(){
   if(audio.paused) audio.play().catch(()=>{});
   else audio.pause();
 }
-audio.addEventListener('play',  () => setPS('playing'));
+let badgeDimmed = false;
+function scheduleBadgeDim(){
+  if(badgeDimmed) return;
+  badgeDimmed = true;
+  setTimeout(() => document.querySelector('.badge').classList.add('dim'), 5000);
+}
+audio.addEventListener('play',  () => { setPS('playing'); scheduleBadgeDim(); });
 audio.addEventListener('pause', () => setPS('paused'));
 audio.addEventListener('ended', () => {
   setPS('paused');
@@ -452,17 +527,29 @@ audio.addEventListener('ended', () => {
 });
 deck.on('slidechanged', playCurrent);
 
-document.getElementById('start').addEventListener('click', (e) => {
-  e.currentTarget.style.display = 'none';
+function startShow(){
+  const el = document.getElementById('start');
+  if(el.style.display === 'none') return;
+  el.style.display = 'none';
   playCurrent();
-});
+}
+document.getElementById('start').addEventListener('click', startShow);
 document.addEventListener('keydown', (e) => {
-  if(e.key === ' ' || e.code === 'Space'){     // play/pause
+  const coverUp = document.getElementById('start').style.display !== 'none';
+  if(coverUp && (e.key === 'Enter' || e.key === ' ' || e.code === 'Space')){
+    e.preventDefault();
+    startShow();
+  } else if(e.key === ' ' || e.code === 'Space'){   // play/pause
     e.preventDefault();
     togglePause();
-  } else if(e.key === 'a' || e.key === 'A'){    // toggle auto-advance
+  } else if(e.key === 'a' || e.key === 'A'){         // toggle auto-advance
     autoAdvance = !autoAdvance;
     document.getElementById('aa').textContent = autoAdvance ? 'on' : 'off';
+    if(badgeDimmed){                                 // surface the badge while it changes
+      const b = document.querySelector('.badge');
+      b.classList.remove('dim');
+      setTimeout(() => b.classList.add('dim'), 2500);
+    }
   }
 });
 </script>

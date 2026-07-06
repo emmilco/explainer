@@ -59,6 +59,26 @@ Supported visual elements: markdown label lists, `$inline$` / `$$display$$`
 math (KaTeX), fenced ` ```python ` (etc.) code, fenced ` ```mermaid `
 diagrams, and custom SVG using the shared **visual vocabulary** (below).
 
+### Slide registers
+
+A slide opts into a register by making its first line a reveal attribute
+comment: `<!-- .slide: class="divider" -->`.
+
+- **`divider`** — chapter break: full-bleed navy field, vertically centred,
+  salmon serif `##` title; an `###` line above it renders as an uppercase
+  kicker (e.g. `### Part III`). Use at each major section boundary of a long
+  deck so the structure is visible.
+- **`statement`** — a single claim gets the whole screen: one `p`, centred,
+  large serif. No heading.
+- **`compact`** — density escape hatch when a slide measures too tall
+  (`audit_overflow.py`): shrinks text to 26px, tightens list/math spacing, and
+  caps diagram height. Prefer trimming cues; use `compact` when the density is
+  genuinely needed.
+
+The start overlay doubles as the deck's cover: eyebrow, serif title, slide
+count, Start button (click, Enter, or Space). The keyboard-help badge fades to
+near-invisible a few seconds after audio first plays; hover restores it.
+
 **Math gotcha:** the markdown pass (marked.js) strips the backslash from any
 backslash-then-punctuation — so `\%`, `\&`, `\_`, `\#` **and the LaTeX spacing
 commands `\,` `\;` `\:` `\!`** inside `$…$` reach KaTeX as bare `%`/`&`/`,`/`;`/…
@@ -80,7 +100,11 @@ deck; copy its patterns. The system:
 - **edges** — `.edge` + `accent`/`good`/`strong`/`warn`/`plum`/`danger`/`ghost`;
   arrowheads via a per-SVG `<marker>` (unique id per slide to avoid collisions).
 - **labels** — `.lbl` (+ `on-fill`/`mono`/`sm`/`left`), `.cap` (+ `left`), `.tag`;
-  `.olbl` hangs a label *beside* a node too small to hold its text.
+  `.olbl` hangs a label *beside* a node too small to hold its text. All three
+  take the role modifiers `accent`/`good`/`warn`/`danger`/`plum` for semantic
+  text color — never write raw hex in a deck.
+- **regions** — `.region` (+ role) is a translucent set/area (Venn circles,
+  highlighted zones); overlaps blend.
 - **code** — `.code` is left-aligned monospace for a snippet / JSON / annotation
   inside a diagram. (Per-element text overrides must use inline `style=`, not the
   SVG presentation attribute — a class's CSS beats the attribute.)

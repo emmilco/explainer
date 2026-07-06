@@ -26,6 +26,7 @@ It helps to start with why this problem resists the obvious solution of "just us
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## The map of the territory
 
 <div class="viz wide">
@@ -131,6 +132,7 @@ The grammar of version two is a strict positional hierarchy, and understanding i
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## Trigger events and the ACK loop
 
 <div class="viz">
@@ -293,6 +295,7 @@ FHIR — spelled F-H-I-R, pronounced "fire" — stands for Fast Healthcare Inter
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## Anatomy of a Resource
 
 ```json
@@ -320,6 +323,7 @@ This is a FHIR resource in the flesh — an Observation recording a blood pressu
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## References and the resource graph
 
 <div class="viz wide">
@@ -507,6 +511,7 @@ The scopes are worth one more slide, because they are how the principle of least
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## CDS Hooks: decision support at the point of care
 
 <div class="viz wide">
@@ -642,6 +647,7 @@ A handful of vocabularies carry most of the weight, and knowing which does what 
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## Value sets and the terminology server
 
 <div class="viz wide">
@@ -708,6 +714,7 @@ Now we cross the seam into imaging, and the first thing to unlearn is the idea t
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## The DICOM information model
 
 <div class="viz">
@@ -829,6 +836,7 @@ The thing most people call "a DICOM file" is defined by Part ten of the standard
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## DICOM networking: DIMSE and associations
 
 <div class="viz">
@@ -994,6 +1002,7 @@ Color is the next place generic tooling stumbles on ultrasound. A plain B-mode i
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## US structured reporting and measurements
 
 <div class="viz wide">
@@ -1021,6 +1030,7 @@ This is where ultrasound diverges most sharply from radiology, and where a great
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## POCUS: ultrasound off the radiology grid
 
 - handheld & pocket devices — Butterfly, Philips Lumify, Clarius, GE Vscan — move US out of radiology to the bedside
@@ -1110,6 +1120,7 @@ Now we can make the seam from the very first map concrete. The FHIR resource Ima
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## A modern imaging stack, end to end
 
 <div class="viz wide">

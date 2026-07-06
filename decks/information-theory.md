@@ -190,6 +190,7 @@ The unique function satisfying all three requirements is the negative logarithm 
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## Entropy: the average surprise
 
 <div class="viz">
@@ -474,7 +475,7 @@ Why can't we just make every codeword short? Because in a prefix code, short cod
 $$\text{ideal length } L(x) = -\log_2 p(x)$$
 
 - spend budget in proportion to probability
-- $2^{-L} = p \;\Rightarrow\; L = -\log p$
+- $2^{-L} = p \quad\Rightarrow\quad L = -\log p$
 - ideal code length **is** the surprise function
 - two independent roads, one quantity
 
@@ -721,6 +722,7 @@ To find the crack in the dismal argument, we need to measure exactly how much in
 :::
 
 ---
+<!-- .slide: class="compact" -->
 ## The price of concealment
 
 <div class="viz wide">
@@ -866,6 +868,7 @@ The first idea: stop protecting bits one at a time. Repetition failed because it
 To make that price concrete, we need the geometry the codes actually live in. Picture every n-bit string as a corner of an n-dimensional cube — two corners for n equals one, a square for two, the cube shown here for three, and beyond that a hypercube with two to the n corners that we trust algebra to navigate. Two corners are joined by an edge exactly when they differ in a single bit, so flipping one bit means walking along one edge. The natural distance — Hamming distance — is the number of positions where two strings differ, which is also the shortest walk between their corners. And a ball of radius r around a string is everything reachable within r flips: in the picture, the three highlighted neighbors of zero-zero-zero form its radius-one ball. Now reread the channel in this language: sending a thousand-bit codeword and receiving its corrupted version means the noise has shoved your point about a hundred edge-steps away, in directions you don't know. The next question is the crucial one: how many corners can a shove like that reach?
 :::
 ---
+<!-- .slide: class="compact" -->
 ## How big is a noise ball?
 
 <div class="viz narrow">

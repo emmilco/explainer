@@ -791,7 +791,7 @@ A conflict happens when two leaders concurrently write the same record — and c
 ---
 ## Leaderless: quorums
 
-$$w + r > n \;\Rightarrow\; \text{read and write sets overlap}$$
+$$w + r > n \quad\Rightarrow\quad \text{read and write sets overlap}$$
 
 - any replica accepts writes · read/write *several* in parallel
 - read repair · hinted handoff · anti-entropy
