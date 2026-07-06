@@ -161,11 +161,11 @@ A sequence diagram shows messages exchanged between participants over time — a
 <defs><marker id="arrV" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#1A3F70"/></marker><marker id="arrVg" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10Z" fill="#0F5D5D"/></marker></defs>
 <line class="axis" x1="20" y1="200" x2="220" y2="200"/>
 <line class="axis" x1="40" y1="20" x2="40" y2="220"/>
-<polygon points="40,200 150,200 190,120 80,120" fill="#B5C5DC" fill-opacity="0.4" stroke="#1A3F70" stroke-width="1.5"/>
+<polygon class="region" points="40,200 150,200 190,120 80,120"/>
 <line class="edge accent" x1="40" y1="200" x2="150" y2="200" stroke-width="3" marker-end="url(#arrV)"/>
 <line class="edge good" x1="40" y1="200" x2="80" y2="120" marker-end="url(#arrVg)"/>
-<text class="lbl mono" x="100" y="216" fill="#1A3F70">v₁</text>
-<text class="lbl mono" x="48" y="150" fill="#0F5D5D">v₂</text>
+<text class="lbl mono accent" x="100" y="216">v₁</text>
+<text class="lbl mono good" x="48" y="150">v₂</text>
 </svg>
 </div>
 
@@ -173,6 +173,33 @@ A sequence diagram shows messages exchanged between participants over time — a
 
 ::: narration
 Mathematics needs its own shapes: a coordinate plane with axes, vectors drawn as arrows, regions shaded to show a span or a feasible set, figures transformed. Here the axes use the same thin axis style as the bar chart, vectors are simply edges with arrowheads coloured by role, and the parallelogram they span is a translucent fill in the accent colour. Reusing the edge and axis classes keeps a geometry figure visually of a piece with the rest of the deck rather than looking like it came from a different tool. This covers linear algebra, the geometry of an optimization, a vector field, or any argument that's clearer drawn than stated. The translucent region is a particularly useful move — it shows an area or a set without obscuring the vectors that define it.
+:::
+
+---
+## Regions & colored text
+
+<div class="viz">
+<svg viewBox="0 0 460 250">
+<circle class="region" cx="185" cy="105" r="68"/>
+<circle class="region good" cx="275" cy="105" r="68"/>
+<text class="lbl" x="150" y="105">A</text>
+<text class="lbl" x="310" y="105">B</text>
+<text class="lbl plum" x="230" y="105">A∩B</text>
+<text class="cap" x="230" y="196">overlaps blend on their own</text>
+<text class="tag accent" x="90" y="230">accent</text>
+<text class="tag good" x="160" y="230">good</text>
+<text class="tag warn" x="230" y="230">warn</text>
+<text class="tag danger" x="300" y="230">danger</text>
+<text class="tag plum" x="370" y="230">plum</text>
+</svg>
+</div>
+
+- `.region` (+ role) — a translucent set or area · Venn, feasible sets, spans
+- `.cap` / `.lbl` / `.tag` take the same roles — colored annotation
+- roles, not raw hex — the palette stays free to move
+
+::: narration
+Two additions close the vocabulary's most common workarounds. The first is the region: a translucent shape for anything that is an area rather than an object — the circles of a Venn diagram, a feasible set, the span of two vectors. Regions take the same semantic roles as nodes, and because their fills are translucent, overlapping regions blend on their own, which is exactly what a Venn diagram needs. The second is colored text: captions, labels, and tags now take the role modifiers directly, so an annotation can be marked good or dangerous by class alone. Before these existed, decks reached for raw hex values copied from the palette — which worked, but froze those colors in place. Writing roles instead of hex keeps every diagram tied to the single palette definition, so the whole library restyles together if the palette ever moves.
 :::
 
 ---
@@ -271,6 +298,37 @@ The last additions close the gaps that turn up most. When a node is too small to
 
 ::: narration
 The patterns compose. This single scene combines nearly all of them: nodes in their semantic roles, edges both solid and ghosted, an eased token flowing the live path, and the dim primitive used to fail one node — node B recedes after a beat, and the flow routes around it through A to the output. Nothing here is bespoke; it's the same handful of classes and primitives assembled. That's the payoff of a vocabulary over one-off drawings — a richer picture costs little more than a simpler one, and it stays coherent because every part speaks the same language. A reader who has seen the earlier slides already knows how to read this one: the red node is in trouble, the dashed edge is the path not taken, the moving dot is the data.
+:::
+
+---
+<!-- .slide: class="divider" -->
+### Part II
+## Slide registers
+
+::: narration
+A long deck needs visible structure — after forty slides of salmon paper, a chapter boundary should feel like one. The divider register does that: the whole screen flips to the deep navy of the accent palette, the title sets in the same serif reversed out in salmon, and a small uppercase kicker above it carries the part label. A slide opts in with a single class annotation on its first line; the background, the recolored chrome, and the vertical centering all follow from the register. Use one at each major boundary of a deck, so a listener paging back through can see its skeleton at a glance. The slide speaking right now is itself a divider — as elsewhere in this reference, each register demonstrates itself.
+:::
+
+---
+<!-- .slide: class="statement" -->
+One vocabulary, every deck.
+
+::: narration
+Sometimes a single sentence is the slide. The statement register gives one claim the entire screen: a large serif line, centered, with nothing competing for attention. It is the register for a thesis, a definition worth pausing on, or the turn in an argument — the moment where the narration slows down and the screen should slow down with it. Like every register it costs one line to invoke: a class annotation at the top of the slide, with the sentence as the only content. Used sparingly — once or twice in a deck — it gives the pacing somewhere to breathe, and it tells the listener that this sentence is the one to keep.
+:::
+
+---
+## Authoring registers & density
+
+- opt in on a slide's first line: a `.slide:` class comment
+- `divider` — navy chapter break · `###` kicker + `##` title
+- `statement` — one claim, whole screen, single paragraph
+- `compact` — 26px text · tighter lists · capped diagrams
+- measure, never eyeball: `tools/audit_overflow.py <deck>`
+- the cover is free — title · slide count · start control
+
+::: narration
+Three registers cover the practical needs. Divider and statement give a deck rhythm; compact solves a different problem, density. When a slide genuinely needs more content than the canvas comfortably holds, the compact register drops the text a size, tightens list spacing, and caps diagram height, buying roughly a fifth more room. It is an escape hatch, not a default: the overflow audit tool measures every slide of a rendered deck and reports exactly which ones run past the canvas, so the workflow is render, measure, trim what can be trimmed, and mark what remains as compact. Every register is invoked the same way, with a class annotation as the first line of the slide. And one register comes free: the start screen each deck opens with is a cover, carrying the title, the slide count, and the play control, so the first thing a viewer sees is a title card rather than a bare button.
 :::
 
 ---

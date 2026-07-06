@@ -21,7 +21,7 @@ below.
 
 | Path | Purpose |
 |------|---------|
-| `render.py` | Parses a deck markdown file, synthesizes per-slide narration, emits a self-contained reveal.js slideshow. `--tts say` (default draft) · `--tts higgs` (production default) · `--tts fish` (fallback); GPU voice via `--gpu-voice irons\|fiennes` (default **irons**; `--fish-voice` kept as an alias). Audio cache is keyed by `tts:voice`, so backends never collide. |
+| `render.py` | Parses a deck markdown file, synthesizes per-slide narration, emits a self-contained reveal.js slideshow. `--tts say` (default draft) · `--tts higgs` (production default) · `--tts fish` (fallback); GPU voice via `--gpu-voice irons\|fiennes` (default **irons**; `--fish-voice` kept as an alias). Audio cache is keyed by `tts:voice`, so backends never collide. Each render stamps `<meta name="explainer-tts">` into the HTML; re-rendering a production (higgs/fish) deck under a different backend/voice is **refused** unless `--switch-tts` is passed — upgrading from a `say` draft is always allowed. |
 | `tts_higgs.py` | **Higgs Audio v3** narration worker (production default). Runs under philosophy-tts's `.venv-higgs`; reuses that project's `render_book_higgs` render path (sentence/clause split + `CachedHiggsRenderer` with prefix KV-cache reuse + fade/stitch). Voice names map to Higgs ref-modes (`irons`→`y2` default, `fiennes`, `rorty`). Invoked by `render.py`, not directly. |
 | `tts_fish.py` | Fish S2 Pro narration worker (fallback). Runs under the philosophy-tts venv; reuses that project's production render path. Named voice refs (`irons` default, `fiennes`). Invoked by `render.py`, not directly. |
 | `decks/` | Source decks in the authoring format (`<name>.md`). |
@@ -79,6 +79,11 @@ The start overlay doubles as the deck's cover: eyebrow, serif title, slide
 count, Start button (click, Enter, or Space). The keyboard-help badge fades to
 near-invisible a few seconds after audio first plays; hover restores it.
 
+**Register gotcha:** reveal finds `<!-- .slide: ... -->` by regex on the raw
+markdown, so that literal string *anywhere* in a slide's content — even inside
+backticks or a code fence — is parsed as slide attributes. When a slide talks
+*about* registers, write `.slide:` without the comment markers.
+
 **Math gotcha:** the markdown pass (marked.js) strips the backslash from any
 backslash-then-punctuation — so `\%`, `\&`, `\_`, `\#` **and the LaTeX spacing
 commands `\,` `\;` `\:` `\!`** inside `$…$` reach KaTeX as bare `%`/`&`/`,`/`;`/…
@@ -125,6 +130,25 @@ Layout is a 16:9 (1280×720) canvas, top-aligned (`center:false`), scaled to the
 window; tables/code/math/`.viz` are hard-capped to the slide width so nothing
 overflows the right edge.
 
+## Authoring workflow (run this loop for every deck)
+
+1. **Write** the deck in the format above. Copy visual patterns from
+   `decks/visual-vocabulary.md` — it demonstrates every class and register
+   live; do not invent new styling or write raw hex.
+2. **Draft render** (CPU): `python3 render.py decks/<name>.md`.
+3. **Measure**: `<pw-python> tools/audit_overflow.py <name>` must report
+   `0 / N slides overflow` before a deck ships. Fix overflow by trimming cues
+   first; reach for the `compact` register only when the density is genuinely
+   needed.
+4. **Look**: `<pw-python> tools/shoot.py <name>` and read the screenshots.
+   Measurement catches overflow; only eyes catch a cramped diagram, a label
+   escaping its node, or a slide that reads badly.
+5. **Production audio**: submit through the gpu-broker (see Production
+   rendering). Never launch GPU TTS from a shell.
+
+(`<pw-python>` = any python with playwright, e.g.
+`../ft-briefing/.venv-acquire/bin/python`.)
+
 ## Conventions
 
 - Deck files: kebab-case, e.g. `binary-search.md`.
@@ -132,6 +156,13 @@ overflows the right edge.
   `out/<name>/index.html`. Iterate freely — the per-slide audio cache makes
   re-renders near-instant, and `say` is genuinely good for math-heavy narration
   (spelled-out symbols articulate cleanly), so a deck can ship in `say`.
+- **Frozen decks — never re-render:** `attention-mechanisms`, `binary-search`,
+  `linear-algebra-invertibility`, `mesh-networks`,
+  `mesh-networks-scale-and-security`, `wittgenstein-pi`. Their renders are kept
+  deliberately as evidence of earlier versions of the app; re-rendering
+  destroys that record. Style and pipeline changes apply only to the decks
+  after them. Enforced mechanically: their renders predate the tts stamp, and
+  `render.py` refuses to overwrite an un-stamped render without `--switch-tts`.
 
 ## Production rendering (Higgs / Irons — via gpu-broker)
 

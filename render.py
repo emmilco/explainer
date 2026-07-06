@@ -132,12 +132,37 @@ def _section(visual, narration, audio_rel):
     )
 
 
-def build(deck_path, voice=None, tts="say", gpu_voice="irons"):
+def build(deck_path, voice=None, tts="say", gpu_voice="irons", switch_tts=False):
     deck_path = Path(deck_path)
     name = deck_path.stem
     out_dir = ROOT / "out" / name
     audio_dir = out_dir / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
+
+    # Backend guard: a rendered deck is stamped with its tts:voice. say is the
+    # draft tier, so upgrading say -> anything is always allowed; overwriting a
+    # production (higgs/fish) render with a different backend or voice is
+    # refused unless --switch-tts makes the change deliberate. This protects
+    # against the silent-downgrade mistake (re-rendering a production deck with
+    # the default say backend swaps all audio to drafts).
+    stamp = f"{tts}:{gpu_voice if tts in GPU_TTS else (voice or 'default')}"
+    prev_html = out_dir / "index.html"
+    if prev_html.exists() and not switch_tts:
+        m = re.search(r'name="explainer-tts" content="([^"]+)"', prev_html.read_text())
+        if not m:
+            sys.exit(
+                f"error: out/{name} exists but has no tts stamp, so it predates the "
+                f"current pipeline and may be a frozen historical render (see "
+                f"PROJECT_INDEX: Frozen decks).\nPass --switch-tts only if this deck "
+                f"is safe to re-render."
+            )
+        if m.group(1) != stamp and not m.group(1).startswith("say:"):
+            sys.exit(
+                f"error: {name} was last rendered with production audio "
+                f"({m.group(1)}) but this run selects {stamp}.\n"
+                f"Re-render with the matching backend/voice, or pass "
+                f"--switch-tts to change it deliberately."
+            )
 
     title, slides = parse_deck(deck_path.read_text())
     sections = []
@@ -162,8 +187,10 @@ def build(deck_path, voice=None, tts="say", gpu_voice="irons"):
     if gpu_jobs:
         run_gpu_tts(tts, gpu_jobs, out_dir, gpu_voice)
 
-    html = HTML.replace("{{TITLE}}", title or name).replace(
-        "{{SECTIONS}}", "\n".join(sections)
+    html = (
+        HTML.replace("{{TITLE}}", title or name)
+        .replace("{{TTS_STAMP}}", stamp)
+        .replace("{{SECTIONS}}", "\n".join(sections))
     )
     out_html = out_dir / "index.html"
     out_html.write_text(html)
@@ -176,6 +203,7 @@ HTML = r"""<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="explainer-tts" content="{{TTS_STAMP}}">
 <title>{{TITLE}}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -562,10 +590,13 @@ if __name__ == "__main__":
     args = sys.argv[1:]
     if not args:
         sys.exit("usage: python3 render.py decks/<name>.md [--voice <name>] "
-                 "[--tts say|fish|higgs] [--gpu-voice irons|fiennes]")
+                 "[--tts say|fish|higgs] [--gpu-voice irons|fiennes] [--switch-tts]")
     voice = None
     tts = "say"
     gpu_voice = "irons"
+    switch_tts = "--switch-tts" in args
+    if switch_tts:
+        args.remove("--switch-tts")
     if "--voice" in args:
         i = args.index("--voice")
         voice = args[i + 1]
@@ -581,4 +612,4 @@ if __name__ == "__main__":
             i = args.index(flag)
             gpu_voice = args[i + 1]
             args = args[:i] + args[i + 2:]
-    build(args[0], voice=voice, tts=tts, gpu_voice=gpu_voice)
+    build(args[0], voice=voice, tts=tts, gpu_voice=gpu_voice, switch_tts=switch_tts)
