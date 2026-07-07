@@ -24,7 +24,10 @@ PROBE = r"""
   let hOver = 0, vOver = 0, hEl = '', vEl = '';
   // section's own overflow vs the 1280x720 canvas
   for (const el of sec.querySelectorAll('*')) {
-    if (el.closest('.katex-mathml')) continue;  // KaTeX a11y MathML: clipped invisible, phantom width
+    // KaTeX internals produce phantom widths (hidden a11y MathML; glyph SVGs that
+    // measure in raw path units). The .katex-display container is overflow-x:auto,
+    // so measuring the container itself is sufficient — skip all its descendants.
+    if (el.matches('.katex *, .katex')) continue;
     const r = el.getBoundingClientRect();
     if (r.width === 0 || r.height === 0) continue;
     const ro = r.right - sb.right;        // px past right edge of slide box

@@ -7,8 +7,11 @@ durable artifact that lands in a personal library.
 
 ## Status
 
-In production use. Ten decks rendered across philosophy, CS, math, ML, and
-healthcare IT (see `decks/`). The pipeline has two stages: macOS `say` for fast
+In production use. Fourteen decks rendered across philosophy, CS, math, ML, and
+healthcare IT (see `decks/`), including a four-deck series covering chapters
+4–7 of Raschka, *Build a Large Language Model (From Scratch)*
+(`gpt-architecture`, `llm-pretraining`, `llm-classification-finetuning`,
+`llm-instruction-finetuning`). The pipeline has two stages: macOS `say` for fast
 CPU drafts, and a GPU backend for production audio — **Higgs Audio v3 / Irons**
 is the production default (tracking the philosophy-tts standard), with **Fish
 S2 Pro / Irons** retained as a documented fallback; select via `--tts
