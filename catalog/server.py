@@ -14,6 +14,7 @@ Run (lab-server registers this): uvicorn server:app --host 127.0.0.1 --port 7250
 """
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 from datetime import datetime
@@ -34,8 +35,29 @@ TITLE_HTML_RE = re.compile(r"<title>(.*?)</title>", re.S)
 app = FastAPI(title="Explainer Catalog")
 
 # Cache total length per deck, keyed on index.html mtime so a re-render
-# invalidates it. {stem: (index_mtime, total_seconds)}.
-_length_cache: dict[str, tuple[float, float]] = {}
+# invalidates it. {stem: (index_mtime, total_seconds)}. Persisted to disk so
+# a restart doesn't redo the full ffprobe sweep (~40ms x hundreds of files).
+LENGTH_CACHE_PATH = OUT_DIR / ".length_cache.json"
+
+
+def _load_length_cache() -> dict[str, tuple[float, float]]:
+    try:
+        raw = json.loads(LENGTH_CACHE_PATH.read_text())
+        return {k: (float(v[0]), float(v[1])) for k, v in raw.items()}
+    except (OSError, ValueError, TypeError, IndexError):
+        return {}
+
+
+def _save_length_cache() -> None:
+    tmp = LENGTH_CACHE_PATH.with_suffix(".json.tmp")
+    try:
+        tmp.write_text(json.dumps(_length_cache))
+        tmp.replace(LENGTH_CACHE_PATH)
+    except OSError:
+        pass
+
+
+_length_cache: dict[str, tuple[float, float]] = _load_length_cache()
 
 
 def _deck_title(stem: str, index_html: str) -> str:
@@ -70,6 +92,7 @@ def _total_length(stem: str, base: Path, index_html: str) -> float:
         return cached[1]
     total = sum(_audio_seconds(base / rel) for rel in AUDIO_REF_RE.findall(index_html))
     _length_cache[stem] = (mtime, total)
+    _save_length_cache()
     return total
 
 
@@ -181,3 +204,9 @@ PAGE = """<!doctype html>
 </body>
 </html>
 """
+
+
+@app.get("/healthz")
+async def healthz() -> dict:
+    """Supervisor liveness probe (see lab-server APP_GUIDE.md)."""
+    return {"ok": True}
