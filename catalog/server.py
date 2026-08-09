@@ -21,7 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -165,6 +165,8 @@ PAGE = """<!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Explainers</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Source+Sans+3:wght@400;500;600&display=swap">
@@ -210,3 +212,16 @@ PAGE = """<!doctype html>
 async def healthz() -> dict:
     """Supervisor liveness probe (see lab-server APP_GUIDE.md)."""
     return {"ok": True}
+
+
+APP_DIR = Path(__file__).resolve().parent
+
+
+@app.get("/favicon.svg")
+async def favicon() -> FileResponse:
+    return FileResponse(APP_DIR / "favicon.svg", media_type="image/svg+xml")
+
+
+@app.get("/apple-touch-icon.png")
+async def apple_touch_icon() -> FileResponse:
+    return FileResponse(APP_DIR / "apple-touch-icon.png", media_type="image/png")
