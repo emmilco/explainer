@@ -12,3 +12,6 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+# Seeding corpus — personal claude.ai conversation analyses; local only
+teach/seeding/
