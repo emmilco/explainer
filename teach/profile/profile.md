@@ -2,7 +2,8 @@
 
 Schema v0, seeded 2026-09-20. Working document: agent-maintained, human-auditable.
 Evidence tags: `seed:<slug>` = conversation in `teach/seeding/`; `seed:design` = the
-scoping session (`2f281e55`); `session:YYYY-MM-DD_<slug>` = teach-node sessions (none yet).
+scoping session (`2f281e55`); `session:YYYY-MM-DD_<slug>` = teach-node sessions
+(first: `session:2026-09-19_european-migrations`).
 Where evidence is thin, the entry says so. Claims without a tag are structural scaffolding.
 
 ## Registers
@@ -34,6 +35,11 @@ Where evidence is thin, the entry says so. Claims without a tag are structural s
   (`seed:document-confirmation`). He wants weak joints identified, not comfort.
 - **Direct retrieval.** What the source actually says — Murphy's "incoherent," Karp quotes
   (`seed:trump-voters`), paper findings (`seed:mech-interp`).
+- **Concrete case exposition, one case at a time.** Peoples, dates, routes, events; the
+  ~400-word Germanic/Goths turn went unchallenged (`session:2026-09-19_european-migrations`
+  seq 6–7).
+- **Technical terms defined on first use.** Undefined specialist vocabulary gets called out;
+  the definition itself draws no friction (same session, seq 4 — "demic").
 
 ### What misses
 
@@ -56,6 +62,13 @@ Where evidence is thin, the entry says so. Claims without a tag are structural s
 - **Fabrication.** Claimed to have read his essay; invented a fund ticker; local model
   fabricated a self-correction (`seed:nonmonotonic`, `seed:investment-sim`,
   `seed:hermeneutics-llm`). He catches these; cost is trust.
+- **Predict-before-material.** Cold prediction on new material rejected outright: "cognitive
+  effort ... in service of an error" (`session:2026-09-19_european-migrations` seq 3). The
+  prior anticipation evidence (n≥2) came from contexts where he already had grounds; unaffected.
+- **Interpretive frames served in place of the requested material.** Wants the thing itself,
+  not a theory of it (same session, seq 4).
+- **Turns past ~500 words.** An ~1,100-word segment was flagged "somewhat too long"
+  (same session, seq 6).
 
 ### Style facts
 
@@ -112,9 +125,14 @@ Fluency tiers: **native** (corrects us; skip basics), **working** (fluent use; w
   exhausted the obvious interventions). `seed:nutrition-productivity`, `seed:self-care-app`
 - **Media / film — native.** Bergman complete, Tarkovsky rewatches, prestige TV; operative
   rule: "I don't need to be made miserable in order to feel deep insight." `seed:taste-profile`
-- **Math, history, natural science — insufficient evidence.** Corpus shows linear-algebra and
-  information-theory decks rendered, lattice/category-theory vocabulary in logic contexts, and
-  no observed learning sessions in these domains. Open question (§ Open questions).
+- **History — working, with a named gap (first session evidence).** Strong from the 12th
+  century onward; pre-Roman and early-medieval Europe outside the Greco-Roman core is his
+  self-identified gap ("my whole knowledge base is ... viewed backwards through christendom").
+  Target: peoples-first inventory — origins, dates, routes, dominance, aftermath; material over
+  theory. `session:2026-09-19_european-migrations` (n=1; no formal checks).
+- **Math, natural science — insufficient evidence.** Linear-algebra and information-theory
+  decks rendered, lattice/category-theory vocabulary in logic contexts; no observed learning
+  sessions in these domains. Open question (§ Open questions).
 
 **Known gaps (his own asks):** attention/FF/residual internals; tool-call mechanics; Go
 idioms; anaphora ("Can you tell me what anaphora is?"); "what does recursive self-improvement
@@ -127,28 +145,30 @@ Seeded from corpus; counts accrue as teach sessions run. `n` = observed instance
 
 | Move | Evidence |
 |---|---|
-| explain-segment | Lands when confident/specific; misses when hedged. n=many. |
-| socratic-question | Single-question form lands strongly (n≥3); multi-part/menu form misses (n≥6 refusals). |
-| recall-drill | Lands — his own stated practice: "refresh my memory so that it gets stored better" (n≥3). |
+| explain-segment | Lands when confident/specific; misses when hedged. Case-based exposition lands; theory-frame in place of material misses; observed ceiling ~400–500 words (`session:2026-09-19` seq 4, 6). n=many. |
+| socratic-question | Single-question form lands strongly (n≥3); multi-part/menu form misses (n≥6 refusals). Split observed: scoping question landed (`session:2026-09-19` seq 5); prediction-elicitation on new material rejected (seq 3). |
+| recall-drill | Lands — his own stated practice: "refresh my memory so that it gets stored better" (n≥3). Not exercised in first session. |
 | teach-back | Lands — he volunteers it ("let me repeat that back", "let me tell you what I think the answer is") (n≥4). |
 | worked-example | Lands in technical learning; he controls pacing ("stop at each phase") (n≥1 sustained: interpreter). |
 | analogy-mapping | Lands when concrete and apt (hand-loom, slime mold, roguelike); risky when decorative. |
-| anticipation | Native — "state what I expect the objections to be" (n≥2). |
+| anticipation | Native — "state what I expect the objections to be" (n≥2). Fails as cold prediction on new material (`session:2026-09-19` seq 3). |
 | steelman | Requested explicitly ("steel man the perspective for me") (n≥2). |
-| quiz-item | Endorsed in principle (ruling on formal signals); frequency unproven. n=0 observations. |
+| quiz-item | Endorsed in principle (ruling on formal signals); frequency unproven. n=0 observations (not exercised — first session ended before checks). |
 | minideck | New modality; no evidence. Seed corpus has no deck exposure. |
-| debrief | Endorsed (semi-formal check-ins approved, `seed:design`). n=0. |
+| debrief | Endorsed (semi-formal check-ins approved, `seed:design`). Offered at first-session close; learner ended without answering. n=0. |
 
 ## Retention index
 
-No teach-session records yet. Seed baseline: he runs his own uncued recall drills and re-reads
-(Gadamer ch. 4–5, Sellars, Rorty, *PI* reread in progress) — self-assessed retention, not
-system-tested. No `confirmed` entries to date.
+First teach session (history, `session:2026-09-19_european-migrations`): **untested** — no
+formal checks were run; the learner ended the session. Seed baseline: he runs his own uncued
+recall drills and re-reads (Gadamer ch. 4–5, Sellars, Rorty, *PI* reread in progress) —
+self-assessed retention, not system-tested. No `confirmed` entries to date.
 
 ## Open questions
 
-- **Domain modulation.** All corpus evidence is philosophy/AI/personal; does his engagement
-  style differ in math, history, or natural science? Unknown.
+- **Domain modulation.** All corpus evidence is philosophy/AI/personal. First data point
+  (n=1, history): exposition-first, no predictive prompts; ~400-word turns land, ~1,100
+  flagged. Still open for math and natural science.
 - **Pushback vs. concession.** He concedes cleanly a better frame, but rejects flatly when the
   frame is weaker than his own. The register of disagreement that actually reaches him (as
   opposed to triggering a "No.") is not yet characterized.

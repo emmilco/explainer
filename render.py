@@ -457,6 +457,22 @@ HTML = r"""<!doctype html>
     letter-spacing: .08em; text-transform: uppercase; transition: opacity .6s; }
   .badge.dim { opacity: .12; }
   .badge.dim:hover { opacity: 1; }
+  /* transport — play/pause, restart, elapsed/total for the current slide's narration */
+  .player { position: fixed; top: 12px; right: 14px; z-index: 40;
+    display: flex; align-items: center; gap: .45rem;
+    font: 500 .72rem var(--mono); color: var(--muted);
+    background: rgba(246,229,210,.72); border: 1px solid var(--rule);
+    border-radius: 999px; padding: .26rem .55rem; }
+  .player button { background: none; border: none; cursor: pointer;
+    font-size: .95rem; line-height: 1; color: var(--ink-soft); padding: .05rem .18rem; border-radius: 4px; }
+  .player button:hover { color: var(--info); }
+  .player button:focus-visible { outline: 2px solid var(--info); outline-offset: 1px; }
+  .player .time { font-variant-numeric: tabular-nums; letter-spacing: .02em;
+    min-width: 8.5ch; text-align: center; }
+  /* dark divider slides recolor the HUD, same as .badge / slide-number above */
+  html:has(.reveal .slides section.present.divider) .player {
+    color: var(--info-soft); background: rgba(26,63,112,.45); border-color: rgba(181,197,220,.35); }
+  html:has(.reveal .slides section.present.divider) .player button { color: var(--paper); }
 </style>
 </head>
 <body>
@@ -471,6 +487,11 @@ HTML = r"""<!doctype html>
 {{SECTIONS}}
 </div></div>
 <div class="badge"><b id="ps">ready</b> &middot; space: play/pause &middot; auto-advance <b id="aa">on</b> (A) &middot; notes: S</div>
+<div class="player" id="player">
+  <button id="pl-restart" aria-label="Restart current narration" title="Restart narration">&#9198;</button>
+  <button id="pl-toggle" aria-label="Play or pause narration" title="Play / pause">&#9654;</button>
+  <span class="time"><span id="pl-cur">0:00</span> / <span id="pl-dur">0:00</span></span>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js"></script>
@@ -530,9 +551,15 @@ let autoAdvance = true;
 
 function setPS(t){ const el = document.getElementById('ps'); if(el) el.textContent = t; }
 
+let loadedSrc = null;
 function playCurrent(){
   const cur = deck.getCurrentSlide();
   const src = cur && cur.getAttribute('data-audio');
+  // A mobile orientation change makes reveal re-fit and can re-fire slidechanged
+  // for the same slide. Reloading the same clip would restart it, so bail when the
+  // current slide's narration is already the loaded track and keep playing.
+  if(src && src === loadedSrc && audio.src) return;
+  loadedSrc = src;
   audio.pause();
   if(src){ audio.src = src; audio.currentTime = 0; audio.play().catch(()=>{}); }
 }
@@ -554,6 +581,29 @@ audio.addEventListener('ended', () => {
   if(autoAdvance && !deck.isLastSlide()) deck.next();
 });
 deck.on('slidechanged', playCurrent);
+
+// ——— transport controls (bottom-left) ———
+const PLAY_GLYPH = '&#9654;', PAUSE_GLYPH = '&#9208;';
+const plToggle = document.getElementById('pl-toggle');
+const plRestart = document.getElementById('pl-restart');
+const plCur = document.getElementById('pl-cur');
+const plDur = document.getElementById('pl-dur');
+function fmtTime(s){
+  if(!isFinite(s) || s < 0) s = 0;
+  const m = Math.floor(s / 60), ss = Math.floor(s % 60);
+  return m + ':' + String(ss).padStart(2, '0');
+}
+function updateTime(){ plCur.textContent = fmtTime(audio.currentTime); plDur.textContent = fmtTime(audio.duration); }
+audio.addEventListener('loadedmetadata', updateTime);
+audio.addEventListener('timeupdate', updateTime);
+audio.addEventListener('durationchange', updateTime);
+audio.addEventListener('play',  () => { plToggle.innerHTML = PAUSE_GLYPH; });
+audio.addEventListener('pause', () => { plToggle.innerHTML = PLAY_GLYPH; });
+audio.addEventListener('ended', () => { plToggle.innerHTML = PLAY_GLYPH; });
+plToggle.addEventListener('click', () => { if(!audio.src) startShow(); else togglePause(); });
+plRestart.addEventListener('click', () => {
+  if(audio.src){ audio.currentTime = 0; audio.play().catch(()=>{}); updateTime(); }
+});
 
 function startShow(){
   const el = document.getElementById('start');
