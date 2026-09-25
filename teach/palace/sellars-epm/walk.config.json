@@ -1,0 +1,20 @@
+{
+  "title": "Empiricism and the Philosophy of Mind",
+  "seed": 1956,
+  "speed": 1.8,
+  "hold": 15,
+  "regions": [
+    { "type": "forest", "units": ["U0", "U1"] },
+    { "type": "taiga", "units": ["U2"] },
+    { "type": "alpine", "units": ["U3"] },
+    { "type": "glacial", "units": ["U4"] },
+    { "type": "autumn", "units": ["U5"] },
+    { "type": "karst", "units": ["U6"] },
+    { "type": "canyon", "units": ["U7"] },
+    { "type": "saltflat", "units": ["U8"] },
+    { "type": "volcanic", "units": ["U9"] },
+    { "type": "steppe", "units": ["U10"] },
+    { "type": "seacliffs", "units": ["U11"] },
+    { "type": "pass", "units": ["U12"] }
+  ]
+}

@@ -92,7 +92,7 @@ Fluency tiers: **native** (corrects us; skip basics), **working** (fluent use; w
   "pseudoethical"), Kant (corrects the assistant), Nietzsche, Kierkegaard. German terms used
   unprompted (*Spiel*, *Bildung*, *verbum*, *logos*). `seed:brandom-walking`, `seed:gadamer`,
   `seed:sellars`, `seed:hermeneutics-llm`
-- **Analytic philosophy / phil. of language — native-ish.** Sellars (*EPM* chapter-by-chapter),
+- **Analytic philosophy / phil. of language — native-ish.** Sellars (*EPM*: first reading, midway, as of 2026-09-24 — `session:2026-09-24`; corrected by Elliot — the seed's "chapter-by-chapter" claim overstated it),
   Kripke/Kripkenstein literature, rule-following debates (Baker & Hacker, McDowell),
   inferentialism. `seed:sellars`, `seed:rorty`
 - **Logic — working.** Nonmonotonic logic; closure operators, lattices, order-theoretic vs.
@@ -161,7 +161,7 @@ Seeded from corpus; counts accrue as teach sessions run. `n` = observed instance
 
 First teach session (history, `session:2026-09-19_european-migrations`): **untested** — no
 formal checks were run; the learner ended the session. Seed baseline: he runs his own uncued
-recall drills and re-reads (Gadamer ch. 4–5, Sellars, Rorty, *PI* reread in progress) —
+recall drills and re-reads (Gadamer ch. 4–5, Sellars [first read in progress, not a re-read], Rorty, *PI* reread in progress) —
 self-assessed retention, not system-tested. No `confirmed` entries to date.
 
 ## Open questions

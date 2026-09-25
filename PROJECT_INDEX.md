@@ -32,6 +32,7 @@ below.
 | `catalog/server.py` | FastAPI catalog app (lab-server `[apps.explainers]`, binds the Unix socket `~/.lab-sockets/explainers.sock`). Lists every rendered explainer by title, length, and creation date; mounts `out/` at `/view` so titles link to the live deck. Length is summed only over `index.html`'s referenced audio, so it reflects the current render and never double-counts cached say/fish audio; per-deck lengths are cached in `out/.length_cache.json` (keyed on `index.html` mtime) so a server restart doesn't redo the ffprobe sweep. Reachable at `https://explainers.emmilco.com` via the lab auth gateway when `./lab` runs. |
 | `tools/` | Self-review + render utilities. `shoot.py <deck> [slide...]` and `audit_overflow.py <deck>` run under a playwright-equipped python (e.g. `../ft-briefing/.venv-acquire/bin/python`): screenshots slides to `/tmp/shots/<deck>/` and reports per-slide horizontal/vertical overflow, so layout bugs are located by measurement, not eyeballing. `render_higgs.sh` / `render_fish.sh decks/<name>.md` are the gpu-broker-conformant render runners (Higgs default, Fish fallback; trap stop signals → exit 42; resumable via the audio cache) — see Production rendering. |
 | `teach/` | Learning-loop node for "teach me about X": learner profile, topic graph, session atoms, and a DeepSeek-assisted move search. Design: `teach/DESIGN.md`; session contract: `teach/TEACH.md`. Seed corpus in `teach/seeding/` (local only). |
+| `teach/palace/` | **Palace walks** — narrated memory-palace walks through procedurally generated landscapes (three.js, in-browser). See "Palace walks" below. |
 | `.claude/` | Project harness config. `hooks/bash-guard.sh` is a `PreToolUse` Bash guard (wired in `settings.local.json`) that flags `rm` commands for manual approval and auto-approves other bash. |
 
 ## Deck authoring format
@@ -152,6 +153,23 @@ overflows the right edge.
 
 (`<pw-python>` = any python with playwright, e.g.
 `../ft-briefing/.venv-acquire/bin/python`.)
+
+## Palace walks (`teach/palace/`)
+
+A walk is a long narrated script played while the camera walks a trail through a generated
+world; at ~1 stop per minute the walker pauses at an image (easel or rock-face projection) with a
+keyword placed in the landscape. Narration never mentions the images. Time is the narration's
+clock: every pose is a function of it, so seeking works.
+
+| Path | Purpose |
+|------|---------|
+| `engine/` | The reusable engine. `world.js` (regions blended along +x; contour-following trail; route tables), `regions/*.js` (one landscape type each — the region contract is in `REGIONS_BRIEF.md`), `layers.js` (16 Poly Haven ground layers), `ground.js` (splat material), `tiles.js` + `terrain-worker.js` (streamed LOD terrain, flora scatter, grass field), `flora.js` (EZ-Tree trees/bushes, rocks, cacti, impostors), `grass.js`, `vignettes.js` (small distinctive features), `walker.js` (stops, choreography, gaze), `app.js` (renderer/sky/atmosphere), `plan.mjs` (Node planner: audio timeline → region lengths, stops, vignettes, vistas, glances → `plan.json`). `dev.html?regions=a:len,b:len` previews regions; `tools/shoot.py` / `tools/shoot_walk.py` screenshot (Playwright python, server on :8766 rooted at `teach/palace/`). |
+| `proto/` | The first single-valley prototype (kept for reference). |
+| `sellars-epm/` | The Sellars *EPM* walk: `map.md` (argument map), `style.md`, `narration/U*.md` (script units with stop blocks), `script.md` (assembled draft), `build_tts.py` + `render_tts.sh` (Higgs per-block audio via gpu-broker), `check_audio.py` (+ `.sh`, mlx-whisper verification via broker), `build_audio.py` (sample-exact narration track), `walk.config.json` (region per unit), `plan.json`, `images/` (95 Commons images + `manifest.json` with licenses), `index.html` (the walk). `source/` (EPM text) and `audio/` are gitignored. |
+
+Build a walk: script → `build_tts.py --plan` → broker `render_tts.sh` → broker `check_audio.sh`
+→ `build_tts.py --durations` → `node engine/plan.mjs <walk-dir>` → `build_audio.py` → serve
+`teach/palace/` and open `<walk-dir>/index.html`.
 
 ## Conventions
 

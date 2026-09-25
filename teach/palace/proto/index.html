@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Palace prototype</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #0d1116; overflow: hidden; }
+  canvas { display: block; }
+  #overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(10, 14, 20, 0.72);
+    color: #efe6d6; font-family: Georgia, serif; text-align: center; }
+  #overlay h1 { font-weight: 400; font-size: 44px; margin: 0 0 8px; }
+  #overlay .status { font: 14px/1.4 ui-sans-serif, system-ui; opacity: 0.7; margin-bottom: 22px; }
+  #overlay button { font: 16px ui-sans-serif, system-ui; padding: 10px 28px; border-radius: 999px; border: 1px solid #efe6d6;
+    background: transparent; color: #efe6d6; cursor: pointer; }
+  #overlay button:disabled { opacity: 0.35; cursor: default; }
+  #clock { position: fixed; right: 16px; bottom: 12px; font: 12px ui-monospace, monospace; color: #fff; opacity: 0.35; }
+  #keys { position: fixed; left: 16px; bottom: 12px; font: 12px ui-sans-serif, system-ui; color: #fff; opacity: 0.35; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three/three.module.js",
+  "three/addons/": "./vendor/three/addons/",
+  "ez-tree": "./vendor/ez-tree/ez-tree.es.js"
+} }
+</script>
+</head>
+<body>
+<div id="overlay"><div>
+  <h1>Forest to desert</h1>
+  <div class="status">Generating landscape…</div>
+  <button disabled>Begin walk</button>
+</div></div>
+<div id="clock"></div>
+<div id="keys">space pause · ←/→ 10s</div>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

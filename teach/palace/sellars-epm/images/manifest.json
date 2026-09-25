@@ -1,0 +1,952 @@
+{
+ "U0.00": {
+  "file": "images/U0.00.jpg",
+  "commons_title": "File:The Leaning Tower of Pisa SB.jpeg",
+  "url": "https://commons.wikimedia.org/wiki/File:The_Leaning_Tower_of_Pisa_SB.jpeg",
+  "license": "CC BY-SA 3.0",
+  "artist": "Saffron Blaze",
+  "depicts": "The Leaning Tower of Pisa, a building tilting on a failed foundation",
+  "changed_from_suggestion": true,
+  "why": "generic foundation stone replaced by the world's most famous failed foundation"
+ },
+ "U0.01": {
+  "file": "images/U0.01.jpg",
+  "commons_title": "File:Ludwig Wittgenstein 1929.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Ludwig_Wittgenstein_1929.jpg",
+  "license": "Public domain",
+  "artist": "Moritz Nähr",
+  "depicts": "Ludwig Wittgenstein, photographed in 1929",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U1.00": {
+  "file": "images/U1.00.jpg",
+  "commons_title": "File:Immanuel Kant - Gemaelde 1.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Immanuel_Kant_-_Gemaelde_1.jpg",
+  "license": "Public domain",
+  "artist": "Johann Gottlieb Becker (1720-1782)",
+  "depicts": "Portrait of Immanuel Kant (Johann Gottlieb Becker, 1768)",
+  "changed_from_suggestion": true,
+  "why": "Hegel's Schlesinger portrait is reserved for U12.10; Kant is the other giant Sellars names here"
+ },
+ "U1.01": {
+  "file": "images/U1.01.jpg",
+  "commons_title": "File:Atlas of the Munsell Color System page 13.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Atlas_of_the_Munsell_Color_System_page_13.jpg",
+  "license": "Public domain",
+  "artist": "Albert Henry Munsell (1858–1918)",
+  "depicts": "Plate from the 1915 Atlas of the Munsell Color System: graded colour chips",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U1.02": {
+  "file": "images/U1.02.jpg",
+  "commons_title": "File:Pieter Claesz. - Stilleven met kalkoenpastei - Google Art Project.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Pieter_Claesz._-_Stilleven_met_kalkoenpastei_-_Google_Art_Project.jpg",
+  "license": "Public domain",
+  "artist": "Pieter Claesz",
+  "depicts": "Pieter Claesz, Still Life with Turkey Pie (1627)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U1.03": {
+  "file": "images/U1.03.jpg",
+  "commons_title": "File:G. E. Moore c. 1903.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:G._E._Moore_c._1903.jpg",
+  "license": "Public domain",
+  "artist": "Unknown authorUnknown author",
+  "depicts": "G. E. Moore, photographed c. 1903",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U1.04": {
+  "file": "images/U1.04.jpg",
+  "commons_title": "File:ImpossibleTriangleEastPerth gobeirne.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:ImpossibleTriangleEastPerth_gobeirne.jpg",
+  "license": "CC BY-SA 3.0",
+  "artist": "Photograph by Greg O'Beirne",
+  "depicts": "The Impossible Triangle sculpture in East Perth: a Penrose triangle built full-size in aluminium",
+  "changed_from_suggestion": true,
+  "why": "a real 3D sculpture of the Penrose triangle instead of a drawn diagram"
+ },
+ "U1.05": {
+  "file": "images/U1.05.jpg",
+  "commons_title": "File:Hecate, or The Night of Enitharmon's Joy, Butlin 316.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Hecate,_or_The_Night_of_Enitharmon%27s_Joy,_Butlin_316.jpg",
+  "license": "Public domain",
+  "artist": "William Blake",
+  "depicts": "William Blake, The Night of Enitharmon's Joy (Triple Hecate), c. 1795",
+  "changed_from_suggestion": true,
+  "why": "generic three-armed signpost replaced by Hecate, three-faced goddess of the crossroads"
+ },
+ "U1.06": {
+  "file": "images/U1.06.jpg",
+  "commons_title": "File:The Chimera of Arezzo, 400 BC, 224249.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:The_Chimera_of_Arezzo,_400_BC,_224249.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Zde",
+  "depicts": "The Chimera of Arezzo, Etruscan bronze hybrid monster, c. 400 BC",
+  "changed_from_suggestion": true,
+  "why": "a stray dog replaced by the most famous mongrel beast in art (lion, goat and serpent)"
+ },
+ "U1.07": {
+  "file": "images/U1.07.jpg",
+  "commons_title": "File:John Bunyan, The Road From the City of Destruction to the Celestial City 1821 Cornell CUL PJM 1038 01.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:John_Bunyan,_The_Road_From_the_City_of_Destruction_to_the_Celestial_City_1821_Cornell_CUL_PJM_1038_01.jpg",
+  "license": "Public domain",
+  "artist": "John Bunyan",
+  "depicts": "1821 pictorial map of the road from the City of Destruction to the Celestial City (Pilgrim's Progress)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U2.00": {
+  "file": "images/U2.00.jpg",
+  "commons_title": "File:A bunch of tomatoes (Lycopersicon esculentum). Chromolithogr Wellcome V0044757.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:A_bunch_of_tomatoes_(Lycopersicon_esculentum)._Chromolithogr_Wellcome_V0044757.jpg",
+  "license": "CC BY 4.0",
+  "artist": "unknown",
+  "depicts": "Chromolithograph of a bunch of ripe tomatoes",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U2.01": {
+  "file": "images/U2.01.jpg",
+  "commons_title": "File:ICS-flags.png",
+  "url": "https://commons.wikimedia.org/wiki/File:ICS-flags.png",
+  "license": "Public domain",
+  "artist": "No author given.",
+  "depicts": "Chart of the International Code of Signals maritime flags",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U2.02": {
+  "file": "images/U2.02.jpg",
+  "commons_title": "File:BernoulliHydrodynamicaFig28.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:BernoulliHydrodynamicaFig28.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Hydromechanik",
+  "depicts": "Daniel Bernoulli's 1738 Hydrodynamica figure: gas particles in a cylinder under a weighted piston",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U3.00": {
+  "file": "images/U3.00.jpg",
+  "commons_title": "File:Red square by Malevich (GRM) FRAME.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Red_square_by_Malevich_(GRM)_FRAME.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "shakko",
+  "depicts": "Kazimir Malevich, Red Square (1915), a single red quadrilateral on white, in its frame",
+  "changed_from_suggestion": true,
+  "why": "the tomato already appears at U2.00; Malevich's Red Square is pure 'looks red'"
+ },
+ "U3.01": {
+  "file": "images/U3.01.jpg",
+  "commons_title": "File:Hans Holbein the Younger - The Ambassadors - Google Art Project.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Hans_Holbein_the_Younger_-_The_Ambassadors_-_Google_Art_Project.jpg",
+  "license": "Public domain",
+  "artist": "Hans Holbein the Younger",
+  "depicts": "Hans Holbein, The Ambassadors (1533), with its anamorphic skull that only looks right from an angle",
+  "changed_from_suggestion": true,
+  "why": "slanted penny replaced by the most famous 'looks different from where you stand' picture"
+ },
+ "U3.02": {
+  "file": "images/U3.02.jpg",
+  "commons_title": "File:Ishihara colour blindness test, London, England, 1948 Wellcome L0058975.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Ishihara_colour_blindness_test,_London,_England,_1948_Wellcome_L0058975.jpg",
+  "license": "CC BY 4.0",
+  "artist": "unknown",
+  "depicts": "Ishihara colour-blindness test plates (London, 1948)",
+  "changed_from_suggestion": true,
+  "why": "generic swatch book replaced by the colour-vision test that separates looking red from being red"
+ },
+ "U3.03": {
+  "file": "images/U3.03.jpg",
+  "commons_title": "File:Ties in Rome (5539880215).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Ties_in_Rome_(5539880215).jpg",
+  "license": "CC BY 2.0",
+  "artist": "jimmyweee",
+  "depicts": "A shop display of colourful silk neckties in Rome",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U3.04": {
+  "file": "images/U3.04.jpg",
+  "commons_title": "File:Edison carbon filament light bulb.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Edison_carbon_filament_light_bulb.jpg",
+  "license": "Public domain",
+  "artist": "Joseph E. Hinds",
+  "depicts": "Edison carbon-filament light bulb",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U3.05": {
+  "file": "images/U3.05.jpg",
+  "commons_title": "File:United States Declaration of Independence.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:United_States_Declaration_of_Independence.jpg",
+  "license": "Public domain",
+  "artist": "original: w:Second Continental Congress; reproduction: William Stone",
+  "depicts": "The engrossed Declaration of Independence with John Hancock's signature",
+  "changed_from_suggestion": true,
+  "why": "notary stamp replaced by history's most famous act of endorsement by signature"
+ },
+ "U3.06": {
+  "file": "images/U3.06.jpg",
+  "commons_title": "File:Microcosm of London Plate 024 - Court of King's Bench, Westminster Hall (colour).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Microcosm_of_London_Plate_024_-_Court_of_King%27s_Bench,_Westminster_Hall_(colour).jpg",
+  "license": "Public domain",
+  "artist": "Thomas Rowlandson (1756–1827) and Augustus Charles Pugin (1762–1832) (after) John Bluck (fl. 1791–1819), Joseph Constantine Stadler (fl. 1780–1812), Thomas Sutherland (1785–1838), J. Hill, and Harraden (aquatint engravers)[1]",
+  "depicts": "Court of King's Bench in Westminster Hall, coloured aquatint from the Microcosm of London (1808)",
+  "changed_from_suggestion": false,
+  "why": "specific named court scene chosen for the suggested courtroom"
+ },
+ "U3.07": {
+  "file": "images/U3.07.jpg",
+  "commons_title": "File:US-$1000-GC-1882-Fr.1218g.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:US-$1000-GC-1882-Fr.1218g.jpg",
+  "license": "Public domain",
+  "artist": "National Museum of American History",
+  "depicts": "US $1000 gold certificate banknote, series 1882",
+  "changed_from_suggestion": true,
+  "why": "a second gold-bar image would duplicate U12.00; a gold-backed paper note matches 'issuing verbal currency'"
+ },
+ "U3.08": {
+  "file": "images/U3.08.jpg",
+  "commons_title": "File:Annibale Carracci - The Choice of Heracles - WGA4416.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Annibale_Carracci_-_The_Choice_of_Heracles_-_WGA4416.jpg",
+  "license": "Public domain",
+  "artist": "Annibale Carracci",
+  "depicts": "Annibale Carracci, The Choice of Hercules (Hercules at the crossroads), 1596",
+  "changed_from_suggestion": true,
+  "why": "third fork-in-the-road signpost replaced by the painted crossroads choice"
+ },
+ "U3.09": {
+  "file": "images/U3.09.jpg",
+  "commons_title": "File:Cleopatra's Needle on Victoria Embankment - geograph.org.uk - 6781212.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Cleopatra%27s_Needle_on_Victoria_Embankment_-_geograph.org.uk_-_6781212.jpg",
+  "license": "CC BY-SA 2.0",
+  "artist": "Steve Daniels",
+  "depicts": "Cleopatra's Needle on the Victoria Embankment, London",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U3.10": {
+  "file": "images/U3.10.jpg",
+  "commons_title": "File:International prototype of the kilogram aka Le Grand K.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:International_prototype_of_the_kilogram_aka_Le_Grand_K.jpg",
+  "license": "CC BY-SA 3.0 igo",
+  "artist": "BIPM",
+  "depicts": "Replica of the International Prototype Kilogram under its nested bell jars",
+  "changed_from_suggestion": true,
+  "why": "thermometer appears twice elsewhere; the physical standard of mass pictures 'standard conditions'"
+ },
+ "U3.11": {
+  "file": "images/U3.11.jpg",
+  "commons_title": "File:Box, paint (51360798639).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Box,_paint_(51360798639).jpg",
+  "license": "CC BY 2.0",
+  "artist": "Auckland Museum Collections from Auckland, Aotearoa New Zealand",
+  "depicts": "An antique artist's paint box, open, with its full row of pigment cakes",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U3.12": {
+  "file": "images/U3.12.jpg",
+  "commons_title": "File:Dew on spider web Luc Viatour.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Dew_on_spider_web_Luc_Viatour.jpg",
+  "license": "CC BY-SA 3.0",
+  "artist": "Luc Viatour",
+  "depicts": "A dew-beaded spider web",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U3.13": {
+  "file": "images/U3.13.jpg",
+  "commons_title": "File:Friedrich Hegel mit Studenten Lithographie F Kugler.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Friedrich_Hegel_mit_Studenten_Lithographie_F_Kugler.jpg",
+  "license": "Public domain",
+  "artist": "Franz Kugler",
+  "depicts": "Franz Kugler's lithograph of Hegel lecturing to students in Berlin, 1828",
+  "changed_from_suggestion": true,
+  "why": "a third Hegel portrait replaced by the lecturing-Hegel scene, visually distinct from U12.10"
+ },
+ "U4.00": {
+  "file": "images/U4.00.jpg",
+  "commons_title": "File:Francisco de Zurbarán - Still Life with Lemons, Oranges and a Rose.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Francisco_de_Zurbar%C3%A1n_-_Still_Life_with_Lemons,_Oranges_and_a_Rose.jpg",
+  "license": "Public domain",
+  "artist": "Francisco de Zurbarán",
+  "depicts": "Francisco de Zurbarán, Still Life with Lemons, Oranges and a Rose (1633)",
+  "changed_from_suggestion": true,
+  "why": "an orange under stage light is hard to source; Zurbarán's oranges are the famous painted orange objects"
+ },
+ "U4.01": {
+  "file": "images/U4.01.jpg",
+  "commons_title": "File:Expérience aërostatique faite à Versailles le 19 septembre 1783.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Exp%C3%A9rience_a%C3%ABrostatique_faite_%C3%A0_Versailles_le_19_septembre_1783.jpg",
+  "license": "Public domain",
+  "artist": "unknown",
+  "depicts": "Montgolfier balloon ascent at Versailles, 19 September 1783",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U4.02": {
+  "file": "images/U4.02.jpg",
+  "commons_title": "File:Portobello's old red phone booth in the fog (93248377).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Portobello%27s_old_red_phone_booth_in_the_fog_(93248377).jpg",
+  "license": "CC BY 2.0",
+  "artist": "Andrew Girdwood from Edinburgh, Scotland",
+  "depicts": "A red telephone box in fog, Portobello",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U4.03": {
+  "file": "images/U4.03.jpg",
+  "commons_title": "File:A Highway Mirage (5994891327).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:A_Highway_Mirage_(5994891327).jpg",
+  "license": "CC BY 2.0",
+  "artist": "Michael from Calgary, AB, Canada",
+  "depicts": "A mirage shimmering over a straight highway",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U4.04": {
+  "file": "images/U4.04.jpg",
+  "commons_title": "File:Hermann Minkowski Portrait.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Hermann_Minkowski_Portrait.jpg",
+  "license": "Public domain",
+  "artist": "Hermann Minkowski",
+  "depicts": "Portrait of the mathematician Hermann Minkowski",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U4.05": {
+  "file": "images/U4.05.jpg",
+  "commons_title": "File:Diana of Versailles.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Diana_of_Versailles.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Commonists",
+  "depicts": "The Diana of Versailles, marble huntress with a deer, Louvre",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U5.00": {
+  "file": "images/U5.00.jpg",
+  "commons_title": "File:Frans Hals - Portret van René Descartes.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Frans_Hals_-_Portret_van_Ren%C3%A9_Descartes.jpg",
+  "license": "Public domain",
+  "artist": "After Frans Hals",
+  "depicts": "Frans Hals' portrait of René Descartes",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U5.01": {
+  "file": "images/U5.01.jpg",
+  "commons_title": "File:Double rainbow - Flickr - conall...jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Double_rainbow_-_Flickr_-_conall...jpg",
+  "license": "CC BY 2.0",
+  "artist": "Conall from Downpatrick, Northern Ireland",
+  "depicts": "A double rainbow over the sea: the outer bow's colours run in inverted order",
+  "changed_from_suggestion": true,
+  "why": "Newton's colour circle would nearly duplicate Goethe's wheel at U12.04; a double rainbow literally inverts the spectrum"
+ },
+ "U5.02": {
+  "file": "images/U5.02.jpg",
+  "commons_title": "File:Godfrey Kneller - Portrait of John Locke (Hermitage).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Godfrey_Kneller_-_Portrait_of_John_Locke_(Hermitage).jpg",
+  "license": "Public domain",
+  "artist": "Godfrey Kneller",
+  "depicts": "Godfrey Kneller's portrait of John Locke (1697)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U5.03": {
+  "file": "images/U5.03.jpg",
+  "commons_title": "File:John Smibert - The Bermuda Group (Dean Berkeley and His Entourage) - 1808.1 - Yale University Art Gallery.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:John_Smibert_-_The_Bermuda_Group_(Dean_Berkeley_and_His_Entourage)_-_1808.1_-_Yale_University_Art_Gallery.jpg",
+  "license": "Public domain",
+  "artist": "John Smibert",
+  "depicts": "John Smibert, The Bermuda Group: Dean Berkeley and his entourage (1728-39)",
+  "changed_from_suggestion": true,
+  "why": "breaks a run of three single portraits (Locke, Berkeley, Hume) with Smibert's group scene centred on Berkeley"
+ },
+ "U5.04": {
+  "file": "images/U5.04.jpg",
+  "commons_title": "File:Allan Ramsay - David Hume, 1711 - 1776. Historian and philosopher - Google Art Project.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Allan_Ramsay_-_David_Hume,_1711_-_1776._Historian_and_philosopher_-_Google_Art_Project.jpg",
+  "license": "Public domain",
+  "artist": "Allan Ramsay",
+  "depicts": "Allan Ramsay's portrait of David Hume in a red coat (1766)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U5.05": {
+  "file": "images/U5.05.jpg",
+  "commons_title": "File:JohnsonDictionary.png",
+  "url": "https://commons.wikimedia.org/wiki/File:JohnsonDictionary.png",
+  "license": "Public domain",
+  "artist": "Samuel Johnson",
+  "depicts": "Title page of Samuel Johnson's Dictionary of the English Language (1755)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U5.06": {
+  "file": "images/U5.06.jpg",
+  "commons_title": "File:Caspar David Friedrich - Two Men Contemplating the Moon - Google Art Project.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Caspar_David_Friedrich_-_Two_Men_Contemplating_the_Moon_-_Google_Art_Project.jpg",
+  "license": "Public domain",
+  "artist": "Caspar David Friedrich",
+  "depicts": "Caspar David Friedrich, Two Men Contemplating the Moon (c. 1825-30)",
+  "changed_from_suggestion": true,
+  "why": "generic moonlit forest replaced by the specific, famous Romantic moonlit scene"
+ },
+ "U6.00": {
+  "file": "images/U6.00.jpg",
+  "commons_title": "File:Helen Keller with Anne Sullivan in July 1888.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Helen_Keller_with_Anne_Sullivan_in_July_1888.jpg",
+  "license": "Public domain",
+  "artist": "Family member of Thaxter P. Spencer, now part of the R. Stanton Avery Special Collections, at the New England Historic Genealogical Society. See Press Release [1] for more information.",
+  "depicts": "Helen Keller with her teacher Anne Sullivan, July 1888",
+  "changed_from_suggestion": true,
+  "why": "Pickwick engraving replaced by the iconic image of awareness arriving with language"
+ },
+ "U6.01": {
+  "file": "images/U6.01.jpg",
+  "commons_title": "File:Thermometer by D.G. Fahrenheit (5192214397).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Thermometer_by_D.G._Fahrenheit_(5192214397).jpg",
+  "license": "CC BY 2.0",
+  "artist": "tacowitte from Holland",
+  "depicts": "An early mercury thermometer made by D. G. Fahrenheit, Museum Boerhaave",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U6.02": {
+  "file": "images/U6.02.jpg",
+  "commons_title": "File:David Loggan - Oxonia Illustrata, 1675 - Map of Oxford (BL 128.h.10)-detail.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:David_Loggan_-_Oxonia_Illustrata,_1675_-_Map_of_Oxford_(BL_128.h.10)-detail.jpg",
+  "license": "Public domain",
+  "artist": "Tony Rees",
+  "depicts": "David Loggan's 1675 bird's-eye map of Oxford (detail)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U6.03": {
+  "file": "images/U6.03.jpg",
+  "commons_title": "File:Landseer Edwin-Old Shepherds Chief Mourner 1837.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Landseer_Edwin-Old_Shepherds_Chief_Mourner_1837.jpg",
+  "license": "Public domain",
+  "artist": "Edwin Landseer",
+  "depicts": "Edwin Landseer, The Old Shepherd's Chief Mourner (1837): a faithful dog at its master's coffin",
+  "changed_from_suggestion": false,
+  "why": "specific named painting chosen for the suggested faithful dog"
+ },
+ "U7.00": {
+  "file": "images/U7.00.jpg",
+  "commons_title": "File:Last Judgement (Michelangelo).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Last_Judgement_(Michelangelo).jpg",
+  "license": "Public domain",
+  "artist": "Michelangelo",
+  "depicts": "Michelangelo, The Last Judgment, Sistine Chapel",
+  "changed_from_suggestion": true,
+  "why": "a second generic courtroom replaced by the ultimate court of appeals"
+ },
+ "U7.01": {
+  "file": "images/U7.01.jpg",
+  "commons_title": "File:Berner Iustitia.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Berner_Iustitia.jpg",
+  "license": "Public domain",
+  "artist": "Wikimedia Commons user TheBernFiles.",
+  "depicts": "Blindfolded Justitia with scales, Gerechtigkeitsbrunnen, Bern",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U7.02": {
+  "file": "images/U7.02.jpg",
+  "commons_title": "File:Type case with movable types for letterpress printing in the Gutenberg Museum, Mainz, Germany (48988492232).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Type_case_with_movable_types_for_letterpress_printing_in_the_Gutenberg_Museum,_Mainz,_Germany_(48988492232).jpg",
+  "license": "CC BY 2.0",
+  "artist": "dronepicr",
+  "depicts": "A printer's type case of metal sorts, Gutenberg Museum, Mainz",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U7.03": {
+  "file": "images/U7.03.jpg",
+  "commons_title": "File:Schlick sitting.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Schlick_sitting.jpg",
+  "license": "Public domain",
+  "artist": "unknown",
+  "depicts": "Moritz Schlick, seated portrait photograph",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U7.04": {
+  "file": "images/U7.04.jpg",
+  "commons_title": "File:PSM V10 D562 The hindoo earth.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:PSM_V10_D562_The_hindoo_earth.jpg",
+  "license": "Public domain",
+  "artist": "Unknown authorUnknown author",
+  "depicts": "19th-century engraving of the world on elephants standing on a giant tortoise",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U7.05": {
+  "file": "images/U7.05.jpg",
+  "commons_title": "File:Lightning striking the Eiffel Tower - NOAA.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Lightning_striking_the_Eiffel_Tower_-_NOAA.jpg",
+  "license": "Public domain",
+  "artist": "Gabriel Loppé",
+  "depicts": "Lightning striking the Eiffel Tower, 1902 photograph",
+  "changed_from_suggestion": true,
+  "why": "a second antique thermometer replaced by lightning, the narration's own example of a reliable uniformity"
+ },
+ "U7.06": {
+  "file": "images/U7.06.jpg",
+  "commons_title": "File:Theodolite from the Survey of Ireland, 1826 - Science Museum, London - DSC05562.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Theodolite_from_the_Survey_of_Ireland,_1826_-_Science_Museum,_London_-_DSC05562.jpg",
+  "license": "CC0",
+  "artist": "Daderot",
+  "depicts": "A brass theodolite from the 1826 Survey of Ireland, Science Museum London",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U7.07": {
+  "file": "images/U7.07.jpg",
+  "commons_title": "File:The Dresden Green Diamond.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:The_Dresden_Green_Diamond.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Художник992",
+  "depicts": "The Dresden Green Diamond in its jewelled setting",
+  "changed_from_suggestion": true,
+  "why": "no usable manuscript illumination found, and a reading-scholar painting sat beside the School of Athens; the stop now pictures the report 'This is green'"
+ },
+ "U7.08": {
+  "file": "images/U7.08.jpg",
+  "commons_title": "File:\"The School of Athens\" by Raffaello Sanzio da Urbino.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:%22The_School_of_Athens%22_by_Raffaello_Sanzio_da_Urbino.jpg",
+  "license": "Public domain",
+  "artist": "Raphael",
+  "depicts": "Raphael, The School of Athens, Vatican",
+  "changed_from_suggestion": true,
+  "why": "generic mosaic floor replaced by the canonical picture of a space of reasons and argument"
+ },
+ "U7.09": {
+  "file": "images/U7.09.jpg",
+  "commons_title": "File:Congo African Grey pet on a perch.JPG",
+  "url": "https://commons.wikimedia.org/wiki/File:Congo_African_Grey_pet_on_a_perch.JPG",
+  "license": "Public domain",
+  "artist": "Jonathan g wang contrib",
+  "depicts": "An African grey parrot on a perch",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U7.10": {
+  "file": "images/U7.10.jpg",
+  "commons_title": "File:Mnemosyne (color) Rossetti.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Mnemosyne_(color)_Rossetti.jpg",
+  "license": "Public domain",
+  "artist": "Dante Gabriel Rossetti",
+  "depicts": "Dante Gabriel Rossetti, Mnemosyne (goddess of memory), 1881",
+  "changed_from_suggestion": true,
+  "why": "generic child-with-picture-book replaced by the goddess of memory, since the passage turns on remembering"
+ },
+ "U7.11": {
+  "file": "images/U7.11.jpg",
+  "commons_title": "File:Pont du Gard BLS.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Pont_du_Gard_BLS.jpg",
+  "license": "CC BY-SA 3.0",
+  "artist": "Benh LIEU SONG (Flickr)",
+  "depicts": "The Pont du Gard, Roman aqueduct of arches that stand only together",
+  "changed_from_suggestion": true,
+  "why": "a third botanical plate in a short span replaced by an arched structure: no arch stands until all do"
+ },
+ "U7.12": {
+  "file": "images/U7.12.jpg",
+  "commons_title": "File:Chrysopoea of Cleopatra 1.png",
+  "url": "https://commons.wikimedia.org/wiki/File:Chrysopoea_of_Cleopatra_1.png",
+  "license": "Public domain",
+  "artist": "Unknown authorUnknown author",
+  "depicts": "Ouroboros from the Chrysopoea of Cleopatra, alchemical manuscript",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U8.00": {
+  "file": "images/U8.00.jpg",
+  "commons_title": "File:Palms in the Palm House, Kew Gardens.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Palms_in_the_Palm_House,_Kew_Gardens.jpg",
+  "license": "CC BY-SA 3.0",
+  "artist": "Daniel Case",
+  "depicts": "Palms under the iron-and-glass dome of the Palm House, Kew Gardens",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U8.01": {
+  "file": "images/U8.01.jpg",
+  "commons_title": "File:Flammarion Colored.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Flammarion_Colored.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Houston Physicist",
+  "depicts": "The Flammarion engraving (coloured): a traveller pushes his head through the sky to see the workings of the universe",
+  "changed_from_suggestion": true,
+  "why": "overlapping atlas sheets replaced by the iconic image of 'man-in-the-universe'"
+ },
+ "U8.02": {
+  "file": "images/U8.02.jpg",
+  "commons_title": "File:Victoria Regia. (Expanded flower) (1851).jpeg",
+  "url": "https://commons.wikimedia.org/wiki/File:Victoria_Regia._(Expanded_flower)_(1851).jpeg",
+  "license": "Public domain",
+  "artist": "Walter Hood Fitch, lithography",
+  "depicts": "Walter Hood Fitch's 1851 lithograph of the giant water lily Victoria regia in full flower",
+  "changed_from_suggestion": true,
+  "why": "generic Curtis plate replaced by a specific, spectacular flowering (the Kew water lily)"
+ },
+ "U8.03": {
+  "file": "images/U8.03.jpg",
+  "commons_title": "File:Anonymous - Diogenes brings a plucked chicken to Plato.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Anonymous_-_Diogenes_brings_a_plucked_chicken_to_Plato.jpg",
+  "license": "Public domain",
+  "artist": "Friedrich Georg Weitsch",
+  "depicts": "Painting of Diogenes bringing a plucked chicken to Plato: 'Behold, Plato's man!'",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U8.04": {
+  "file": "images/U8.04.jpg",
+  "commons_title": "File:Vitruvian Man by Leonardo da Vinci.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Vitruvian_Man_by_Leonardo_da_Vinci.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Paris Orlando",
+  "depicts": "Leonardo da Vinci, Vitruvian Man",
+  "changed_from_suggestion": true,
+  "why": "no free Protagoras bust; Vitruvian Man pictures 'man is the measure', which scientia mensura parodies"
+ },
+ "U8.05": {
+  "file": "images/U8.05.jpg",
+  "commons_title": "File:Rembrandt - Jacob Blessing the Children of Joseph - WGA19117.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Rembrandt_-_Jacob_Blessing_the_Children_of_Joseph_-_WGA19117.jpg",
+  "license": "Public domain",
+  "artist": "Rembrandt",
+  "depicts": "Rembrandt, Jacob Blessing the Sons of Joseph (1656): two heirs, one blessing",
+  "changed_from_suggestion": true,
+  "why": "third fork-in-the-road signpost replaced by a painting of two heirs"
+ },
+ "U9.00": {
+  "file": "images/U9.00.jpg",
+  "commons_title": "File:Beat the Whites with the Red Wedge.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Beat_the_Whites_with_the_Red_Wedge.jpg",
+  "license": "Public domain",
+  "artist": "El Lissitzky",
+  "depicts": "El Lissitzky, Beat the Whites with the Red Wedge (1919): a red triangle piercing a white circle",
+  "changed_from_suggestion": true,
+  "why": "hard-to-source red-triangle card replaced by the most famous red triangle in art"
+ },
+ "U9.01": {
+  "file": "images/U9.01.jpg",
+  "commons_title": "File:NSRW The Montessori Devices - learning color.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:NSRW_The_Montessori_Devices_-_learning_color.jpg",
+  "license": "Public domain",
+  "artist": "House of Childhood Inc.",
+  "depicts": "Early photograph of children learning colours with Montessori colour tablets",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U9.02": {
+  "file": "images/U9.02.jpg",
+  "commons_title": "File:A man strapped into a dentist's chair with the dentist looki Wellcome V0011522.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:A_man_strapped_into_a_dentist%27s_chair_with_the_dentist_looki_Wellcome_V0011522.jpg",
+  "license": "CC BY 4.0",
+  "artist": "unknown",
+  "depicts": "Caricature of a man strapped into a dentist's chair (the toothache only S can report)",
+  "changed_from_suggestion": false,
+  "why": "specific print chosen for the suggested dentist's chair"
+ },
+ "U10.00": {
+  "file": "images/U10.00.jpg",
+  "commons_title": "File:Narcissus-Caravaggio (1594-96) edited.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Narcissus-Caravaggio_(1594-96)_edited.jpg",
+  "license": "Public domain",
+  "artist": "Caravaggio",
+  "depicts": "Caravaggio, Narcissus (c. 1597-99): the vain youth gazing at his reflection",
+  "changed_from_suggestion": true,
+  "why": "no freely licensed Ryle portrait on Commons; Narcissus pictures Ryle's example of vanity as a disposition"
+ },
+ "U10.01": {
+  "file": "images/U10.01.jpg",
+  "commons_title": "File:SantaCruz-CuevaManos-P2210651b.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:SantaCruz-CuevaManos-P2210651b.jpg",
+  "license": "Public domain",
+  "artist": "Mariano",
+  "depicts": "Cueva de las Manos, Patagonia: prehistoric stencilled hands",
+  "changed_from_suggestion": true,
+  "why": "generic 'cave painting' made specific with the most arresting prehistoric rock art"
+ },
+ "U10.02": {
+  "file": "images/U10.02.jpg",
+  "commons_title": "File:Rosetta Stone.JPG",
+  "url": "https://commons.wikimedia.org/wiki/File:Rosetta_Stone.JPG",
+  "license": "CC BY-SA 4.0",
+  "artist": "Hans Hillewaert",
+  "depicts": "The Rosetta Stone, British Museum",
+  "changed_from_suggestion": true,
+  "why": "bilingual dictionary would echo Johnson's Dictionary at U5.05; the Rosetta Stone is the iconic semantic key"
+ },
+ "U10.03": {
+  "file": "images/U10.03.jpg",
+  "commons_title": "File:Pontoon bridge across James River - NARA - 524871.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Pontoon_bridge_across_James_River_-_NARA_-_524871.jpg",
+  "license": "Public domain",
+  "artist": "Mathew Benjamin Brady",
+  "depicts": "Civil War photograph of a pontoon bridge of boats across the James River, Virginia",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U10.04": {
+  "file": "images/U10.04.jpg",
+  "commons_title": "File:To pot the red.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:To_pot_the_red.jpg",
+  "license": "CC BY-SA 3.0",
+  "artist": "MichaelMaggs",
+  "depicts": "Snooker balls on green baize, cue lined up on the red",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U10.05": {
+  "file": "images/U10.05.jpg",
+  "commons_title": "File:Amphora birth Athena Louvre F32.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Amphora_birth_Athena_Louvre_F32.jpg",
+  "license": "Public domain",
+  "artist": "User:Bibi Saint-Pol",
+  "depicts": "Attic black-figure amphora: Athena springing from the head of Zeus, Louvre",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U10.06": {
+  "file": "images/U10.06.jpg",
+  "commons_title": "File:An Experiment on a Bird in an Air Pump by Joseph Wright of Derby, 1768.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:An_Experiment_on_a_Bird_in_an_Air_Pump_by_Joseph_Wright_of_Derby,_1768.jpg",
+  "license": "Public domain",
+  "artist": "Joseph Wright of Derby",
+  "depicts": "Joseph Wright of Derby, An Experiment on a Bird in the Air Pump (1768)",
+  "changed_from_suggestion": true,
+  "why": "firewood by a hearth replaced by the famous painting of experiment on invisible air"
+ },
+ "U11.00": {
+  "file": "images/U11.00.jpg",
+  "commons_title": "File:The Thinker, Rodin.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:The_Thinker,_Rodin.jpg",
+  "license": "Public domain",
+  "artist": "AndrewHorne (talk)",
+  "depicts": "Rodin's bronze The Thinker",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U11.01": {
+  "file": "images/U11.01.jpg",
+  "commons_title": "File:Gustave Courbet, 1871, Still Life with Apples and a Pomegranate, National Gallery.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Gustave_Courbet,_1871,_Still_Life_with_Apples_and_a_Pomegranate,_National_Gallery.jpg",
+  "license": "Public domain",
+  "artist": "Gustave Courbet",
+  "depicts": "Gustave Courbet, Still Life with Apples and a Pomegranate (1871)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U11.02": {
+  "file": "images/U11.02.jpg",
+  "commons_title": "File:Muscles of the tongue and head. Engraving, 1686. Wellcome V0007783EL.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Muscles_of_the_tongue_and_head._Engraving,_1686._Wellcome_V0007783EL.jpg",
+  "license": "CC BY 4.0",
+  "artist": "unknown",
+  "depicts": "1686 anatomical engraving of the muscles of the tongue and head",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U11.03": {
+  "file": "images/U11.03.jpg",
+  "commons_title": "File:William Hope 001.png",
+  "url": "https://commons.wikimedia.org/wiki/File:William_Hope_001.png",
+  "license": "Public domain",
+  "artist": "William Hope (1863-1933)",
+  "depicts": "Spirit photograph by William Hope: a translucent ghostly woman behind a seated man",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U11.04": {
+  "file": "images/U11.04.jpg",
+  "commons_title": "File:Morse key-CNAM 14674-2-IMG 5195-white.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Morse_key-CNAM_14674-2-IMG_5195-white.jpg",
+  "license": "CC BY-SA 3.0 fr",
+  "artist": "Rama",
+  "depicts": "A brass Morse telegraph key on a wooden base (Musée des Arts et Métiers)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U11.05": {
+  "file": "images/U11.05.jpg",
+  "commons_title": "File:Janus-Vatican.JPG",
+  "url": "https://commons.wikimedia.org/wiki/File:Janus-Vatican.JPG",
+  "license": "Public domain",
+  "artist": "Fubar Obfusco",
+  "depicts": "Two-faced marble bust of Janus, Vatican Museums",
+  "changed_from_suggestion": true,
+  "why": "worn Janus coin was illegible; the Vatican bust shows the two faces clearly"
+ },
+ "U11.06": {
+  "file": "images/U11.06.jpg",
+  "commons_title": "File:Figure 7 de L'Homme de Descartes.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Figure_7_de_L%27Homme_de_Descartes.jpg",
+  "license": "Public domain",
+  "artist": "Descartes",
+  "depicts": "Descartes' figure from Treatise of Man: a kneeling boy whose foot near a fire triggers a reflex along a nerve",
+  "changed_from_suggestion": true,
+  "why": "Descartes' Hals portrait already used at U5.00; his famous reflex figure from Treatise of Man keeps Descartes at this stop"
+ },
+ "U11.07": {
+  "file": "images/U11.07.jpg",
+  "commons_title": "File:Winslow Homer - The Country School.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Winslow_Homer_-_The_Country_School.jpg",
+  "license": "Public domain",
+  "artist": "Winslow Homer",
+  "depicts": "Winslow Homer, The Country School (1871): a teacher before rows of pupils",
+  "changed_from_suggestion": false,
+  "why": "specific named painting chosen for the suggested schoolroom"
+ },
+ "U11.08": {
+  "file": "images/U11.08.jpg",
+  "commons_title": "File:PositronDiscovery.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:PositronDiscovery.jpg",
+  "license": "Public domain",
+  "artist": "Carl D. Anderson (1905–1991)",
+  "depicts": "Carl Anderson's 1932 cloud-chamber photograph of the first identified positron track",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U11.09": {
+  "file": "images/U11.09.jpg",
+  "commons_title": "File:Scientific apparatus used by Lavoisier in studying chemical reactions in combustion of substances, including mercury, top right) - Paulze Lavoisier, sculpt LCCN92517580.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Scientific_apparatus_used_by_Lavoisier_in_studying_chemical_reactions_in_combustion_of_substances,_including_mercury,_top_right)_-_Paulze_Lavoisier,_sculpt_LCCN92517580.jpg",
+  "license": "Public domain",
+  "artist": "Lavoisier, Marie-Anne-Pierrette, 1758-1836, engraver",
+  "depicts": "Engraving (by Marie-Anne Paulze Lavoisier) of Lavoisier's combustion apparatus",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.00": {
+  "file": "images/U12.00.jpg",
+  "commons_title": "File:400-oz-Gold-Bars-AB-01.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:400-oz-Gold-Bars-AB-01.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Chepry 💬 (Andrzej Barabasz) 📷 🇵🇱",
+  "depicts": "Stacked 400-ounce gold bullion bars",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.01": {
+  "file": "images/U12.01.jpg",
+  "commons_title": "File:Iris of human male.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Iris_of_human_male.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "Osmo Lundell",
+  "depicts": "Macro photograph of a human eye and iris",
+  "changed_from_suggestion": true,
+  "why": "a Descartes engraving is already at U11.06; a close-up eye keeps 'objects acting on the eye' without repeating the style"
+ },
+ "U12.02": {
+  "file": "images/U12.02.jpg",
+  "commons_title": "File:Van Eyck - Arnolfini Portrait.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Van_Eyck_-_Arnolfini_Portrait.jpg",
+  "license": "Public domain",
+  "artist": "Jan van Eyck",
+  "depicts": "Jan van Eyck, The Arnolfini Portrait (1434), with the room replicated in its convex mirror",
+  "changed_from_suggestion": true,
+  "why": "a plain red pennant replaced by art's most famous replica-within-a-picture"
+ },
+ "U12.03": {
+  "file": "images/U12.03.jpg",
+  "commons_title": "File:Balance scale MET DP318014.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Balance_scale_MET_DP318014.jpg",
+  "license": "CC0",
+  "artist": "Creator:Henry N. Hooper and CompanyCreator:O.P. Drake",
+  "depicts": "An antique two-pan balance scale (Metropolitan Museum of Art)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.04": {
+  "file": "images/U12.04.jpg",
+  "commons_title": "File:Goethe, Farbenkreis zur Symbolisierung des menschlichen Geistes- und Seelenlebens, 1809.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Goethe,_Farbenkreis_zur_Symbolisierung_des_menschlichen_Geistes-_und_Seelenlebens,_1809.jpg",
+  "license": "Public domain",
+  "artist": "The original uploader was Luestling at German Wikipedia.",
+  "depicts": "Goethe's hand-painted colour wheel, 1809",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.05": {
+  "file": "images/U12.05.jpg",
+  "commons_title": "File:Leonardo da Vinci - Saint John the Baptist C2RMF retouched.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Leonardo_da_Vinci_-_Saint_John_the_Baptist_C2RMF_retouched.jpg",
+  "license": "Public domain",
+  "artist": "Leonardo da Vinci",
+  "depicts": "Leonardo da Vinci, Saint John the Baptist, pointing upward (Louvre)",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.06": {
+  "file": "images/U12.06.jpg",
+  "commons_title": "File:PurkinjeCell.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:PurkinjeCell.jpg",
+  "license": "Public domain",
+  "artist": "unknown",
+  "depicts": "Santiago Ramón y Cajal's ink drawing of a branching Purkinje neuron",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.07": {
+  "file": "images/U12.07.jpg",
+  "commons_title": "File:Georges Seurat - A Sunday on La Grande Jatte -- 1884 - Google Art Project.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Georges_Seurat_-_A_Sunday_on_La_Grande_Jatte_--_1884_-_Google_Art_Project.jpg",
+  "license": "Public domain",
+  "artist": "Georges Seurat",
+  "depicts": "Georges Seurat, A Sunday on La Grande Jatte (1884), painted in dots",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.08": {
+  "file": "images/U12.08.jpg",
+  "commons_title": "File:Enigma Machine A16672 open.agr.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Enigma_Machine_A16672_open.agr.jpg",
+  "license": "CC BY-SA 4.0",
+  "artist": "ArnoldReinhold",
+  "depicts": "A German Enigma cipher machine, lid open",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.09": {
+  "file": "images/U12.09.jpg",
+  "commons_title": "File:Rembrandt - The Philosopher in Meditation (cleaned).jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Rembrandt_-_The_Philosopher_in_Meditation_(cleaned).jpg",
+  "license": "Public domain",
+  "artist": "Rembrandt",
+  "depicts": "Rembrandt, Philosopher in Meditation (1632), Louvre",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.10": {
+  "file": "images/U12.10.jpg",
+  "commons_title": "File:Jakob Schlesinger - Hegel 1831.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Jakob_Schlesinger_-_Hegel_1831.jpg",
+  "license": "Public domain",
+  "artist": "Jakob Schlesinger",
+  "depicts": "Jakob Schlesinger's 1831 portrait of G. W. F. Hegel",
+  "changed_from_suggestion": false,
+  "why": ""
+ },
+ "U12.11": {
+  "file": "images/U12.11.jpg",
+  "commons_title": "File:Mule in Santorini.jpg",
+  "url": "https://commons.wikimedia.org/wiki/File:Mule_in_Santorini.jpg",
+  "license": "CC0",
+  "artist": "Anthony Baratier",
+  "depicts": "A mule standing in Santorini",
+  "changed_from_suggestion": false,
+  "why": ""
+ }
+}

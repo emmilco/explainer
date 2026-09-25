@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Empiricism and the Philosophy of Mind — a walk</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #0b0e12; overflow: hidden; }
+  canvas { display: block; }
+  #overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(9, 12, 17, 0.78);
+    color: #efe6d6; font-family: Georgia, serif; text-align: center; transition: opacity 1.2s; z-index: 2; }
+  #overlay h1 { font-weight: 400; font-size: 42px; margin: 0 0 6px; letter-spacing: 0.01em; }
+  #overlay .sub { font-style: italic; opacity: 0.75; margin-bottom: 24px; }
+  #overlay .status { font: 13px/1.4 ui-sans-serif, system-ui; opacity: 0.6; margin-bottom: 22px; min-height: 1.4em; }
+  #overlay button { font: 15px ui-sans-serif, system-ui; padding: 10px 30px; border-radius: 999px; border: 1px solid #efe6d6;
+    background: transparent; color: #efe6d6; cursor: pointer; }
+  #overlay button:disabled { opacity: 0.3; cursor: default; }
+  #card { position: fixed; left: 50%; top: 11%; transform: translateX(-50%); color: #f3ecdf; font: 400 26px Georgia, serif;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.55); opacity: 0; transition: opacity 1.6s; pointer-events: none; text-align: center; }
+  #card small { display: block; font: 12px ui-sans-serif, system-ui; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.8; margin-bottom: 6px; }
+  #hud { position: fixed; right: 16px; bottom: 12px; font: 12px ui-monospace, monospace; color: #fff; opacity: 0.28; }
+  #keys { position: fixed; left: 16px; bottom: 12px; font: 12px ui-sans-serif, system-ui; color: #fff; opacity: 0.28; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "../engine/vendor/three/three.module.js",
+  "three/addons/": "../engine/vendor/three/addons/",
+  "ez-tree": "../engine/vendor/ez-tree/ez-tree.es.js"
+} }
+</script>
+</head>
+<body>
+<div id="overlay"><div>
+  <h1>Empiricism and the Philosophy of Mind</h1>
+  <div class="sub">Wilfrid Sellars, 1956 — a walk through the argument</div>
+  <div class="status">Loading…</div>
+  <button disabled>Begin</button>
+</div></div>
+<div id="card"></div>
+<div id="hud"></div>
+<div id="keys">space pause · ←/→ 15 s</div>
+<audio id="narration" src="narration.m4a" preload="auto"></audio>
+<script type="module">
+import * as THREE from 'three';
+import { createEngine } from '../engine/app.js';
+import { createWalk } from '../engine/walker.js';
+
+const q = new URLSearchParams(location.search);
+const overlay = document.getElementById('overlay'), status = overlay.querySelector('.status'), btn = overlay.querySelector('button');
+const say = (s) => { status.textContent = s; };
+const [plan, walkData, manifest] = await Promise.all(['plan.json', 'walk.json', 'images/manifest.json'].map((f) => fetch(f).then((r) => r.json())));
+const images = Object.fromEntries(Object.entries(manifest).map(([id, m]) => [id, { ...m, url: m.file }]));
+const tall = plan.vignettes.filter((v) => v.kind === 'tallgrass').map((v) => ({ x: v.c[0], z: v.c[2], r: v.r }));
+
+const engine = await createEngine({ spec: plan.spec, tables: plan.tables, clear: plan.clear, tall, assetBase: '../engine/assets', quality: q.get('q') || 'high', status: say });
+const walk = await createWalk({ engine, plan, images, assetBase: '../engine/assets' });
+
+// unit title cards
+const units = [];
+for (const b of walkData.blocks) if (!units.find((u) => u.unit === b.unit)) units.push({ unit: b.unit, title: b.unit_title, t0: plan.blocks.find((p) => p.id === b.id).t0 });
+const card = document.getElementById('card');
+let shownUnit = null;
+function showCard(t) {
+  const u = [...units].reverse().find((u) => t >= u.t0 - 1);
+  const on = u && t < u.t0 + 7;
+  if (on && shownUnit !== u.unit) {
+    shownUnit = u.unit;
+    const title = u.title.split(' · ').slice(1).join(' · ') || u.title;
+    const m = title.match(/^(Part[s]? [^:]+):\s*(.*)$/);
+    card.innerHTML = m ? `<small>${m[1]}</small>${m[2]}` : title;
+  }
+  card.style.opacity = on ? 1 : 0;
+}
+
+// clock: the narration track when playing; otherwise a held time
+const audio = document.getElementById('narration');
+audio.muted = q.get('mute') === '1';
+let t = parseFloat(q.get('t') || '0'), playing = false;
+const fmt = (s) => `${Math.floor(s / 3600) ? Math.floor(s / 3600) + ':' : ''}${String(Math.floor(s / 60) % 60).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+async function seek(nt) {
+  t = THREE.MathUtils.clamp(nt, 0, plan.end);
+  const was = playing; if (was) audio.pause();
+  await walk.warmTo(t);
+  audio.currentTime = t;
+  if (was) audio.play();
+}
+say('Building the landscape around the start…');
+await walk.warmTo(t);
+say(`${fmt(plan.end)} · ${plan.stops.length} stops`);
+btn.disabled = false;
+btn.onclick = () => { overlay.style.opacity = 0; setTimeout(() => overlay.remove(), 1300); audio.currentTime = t; audio.play(); playing = true; };
+addEventListener('keydown', (e) => {
+  if (e.code === 'Space') { e.preventDefault(); playing = !playing; if (playing) { audio.currentTime = t; audio.play(); } else audio.pause(); }
+  if (e.code === 'ArrowRight') seek(t + 15);
+  if (e.code === 'ArrowLeft') seek(t - 15);
+});
+
+const hud = document.getElementById('hud');
+function frame(now) {
+  if (playing && !audio.paused) t = audio.currentTime;
+  const { pos, quat, s } = walk.pose(t);
+  walk.sync(s);
+  for (const w of walk.winds) w.value = now / 1000;
+  engine.frame(pos, quat, now / 1000);
+  showCard(t);
+  hud.textContent = `${fmt(t)} / ${fmt(plan.end)}`;
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+window.__walk = { ready: true, seek, plan, stops: plan.stops.map((s) => s.tArrive), stats: () => engine.renderer.info.render };
+</script>
+</body>
+</html>

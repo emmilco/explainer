@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>engine dev</title>
+<style>html,body{margin:0;height:100%;background:#0d1116;overflow:hidden}canvas{display:block}
+#st{position:fixed;left:12px;bottom:10px;font:12px ui-monospace,monospace;color:#fff;opacity:.6}</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/", "ez-tree": "./vendor/ez-tree/ez-tree.es.js" } }</script>
+</head><body><div id="st">…</div>
+<script type="module">
+import * as THREE from 'three';
+import { createEngine } from './app.js';
+const q = new URLSearchParams(location.search);
+const regions = (q.get('regions') || 'forest:1600,canyon:1400').split(',').map((r) => { const [type, len] = r.split(':'); return { type, length: +len }; });
+const st = document.getElementById('st');
+const E = await createEngine({ spec: { regions }, assetBase: './assets', quality: q.get('q') || 'high', status: (s) => { st.textContent = s; } });
+const W = E.world;
+const pose = (x) => {
+  const p = new THREE.Vector3(x, W.pathY(x) + E.EYE, W.pathZ(x));
+  const a = new THREE.Vector3(x + 25, W.pathY(x + 25) + E.EYE + 0.4, W.pathZ(x + 25));
+  const m = new THREE.Matrix4().lookAt(p, a, new THREE.Vector3(0, 1, 0));
+  const yaw = parseFloat(q.get('yaw') || '0');
+  const qq = new THREE.Quaternion().setFromRotationMatrix(m).multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(0, THREE.MathUtils.degToRad(yaw), 0)));
+  return { p, q: qq };
+};
+let x = parseFloat(q.get('x') || '100'), playing = q.get('play') === '1';
+await E.warm(pose(x).p);
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (playing) x += dt * 1.8 * parseFloat(q.get('speed') || '1');
+  const { p, q: qq } = pose(x);
+  E.frame(p, qq, now / 1000);
+  st.textContent = `x ${x.toFixed(0)} · ${W.regionAt(x).type} · tiles loading ${E.tiles.loading}`;
+  requestAnimationFrame(loop);
+}
+window.__eng = { E, ready: true, go: async (nx) => { x = nx; await E.warm(pose(x).p); }, stats: () => E.renderer.info.render };
+requestAnimationFrame(loop);
+</script></body></html>

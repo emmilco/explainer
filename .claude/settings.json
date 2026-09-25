@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcrun devicectl list *)",
+      "Bash(defaults read *)",
+      "Bash(gpu-broker queue*)",
+      "Bash(npm view *)"
+    ]
+  }
+}
