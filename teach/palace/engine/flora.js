@@ -13,7 +13,8 @@ export const VARIANTS = {
   pine1: ['Pine Large', 11, 0x7f9272], pine2: ['Pine Medium', 23, 0x758a6c], pine3: ['Pine Large', 37, 0x8a9a78],
   pineSmall: ['Pine Small', 5, 0x7a8c70], aspen: ['Aspen Medium', 5, 0xb8b894], birch: ['Aspen Large', 14, 0x9fb07a],
   oak: ['Oak Medium', 8, 0x93a47e], oakLarge: ['Oak Large', 17, 0x93a47e], ash: ['Ash Medium', 12, 0x9aa882],
-  autumnOak: ['Oak Medium', 31, 0xd08a3c], autumnMaple: ['Ash Medium', 44, 0xc4502a], autumnBirch: ['Aspen Medium', 52, 0xe0b040],
+  autumnOak: ['Oak Medium', 31, 0xffffff, { leaf: [1.35, 0.62, 0.14] }], autumnMaple: ['Ash Medium', 44, 0xffffff, { leaf: [1.55, 0.34, 0.08] }],
+  autumnBirch: ['Aspen Medium', 52, 0xffffff, { leaf: [1.3, 1.0, 0.22] }],
   dead: ['Ash Medium', 29, 0xffffff, { noLeaves: true, bark: 0xd8d0c4 }],
   fbush: ['Bush 2', 3, 0x8c9c78], dbush: ['Bush 2', 9, 0x949a6a], redbush: ['Bush 1', 21, 0xb0503a], heather: ['Bush 3', 6, 0x9a7aa0],
 };
@@ -114,7 +115,7 @@ export class Flora {
       k.v = makeVariant(preset, seed, tint, opts || {});
       this.winds.push(k.v.wind);
       if (kind === 'tree') {
-        const imp = bakeImpostor(this.renderer, k.v, this.env);
+        const imp = bakeImpostor(this.renderer, k.v, this.scene.environment); // current env: older ones get disposed as the sky changes
         const g = new THREE.InstancedBufferGeometry();
         g.setAttribute('position', new THREE.Float32BufferAttribute([-0.5, 0, 0, 0.5, 0, 0, 0.5, 1, 0, -0.5, 1, 0], 3));
         g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 1, 0, 1, 1, 0, 1], 2));

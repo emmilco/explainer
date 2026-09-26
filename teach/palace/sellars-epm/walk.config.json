@@ -3,6 +3,7 @@
   "seed": 1956,
   "speed": 1.8,
   "hold": 15,
+  "minRegion": 560,
   "regions": [
     { "type": "forest", "units": ["U0", "U1"] },
     { "type": "taiga", "units": ["U2"] },

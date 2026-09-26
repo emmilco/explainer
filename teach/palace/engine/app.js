@@ -82,9 +82,19 @@ export async function createEngine({ spec, tables, clear = [], tall = [], assetB
   status('Shaping the far country…');
   await tiles.buildFar();
 
+  // deep-water colour (linear RGB) blended from each region's optional water.color
+  function waterColorAt(x) {
+    const c = [0, 0, 0];
+    for (const [r, w] of world.weights(x)) {
+      const k = r.mod.water?.color || [0.015, 0.05, 0.045];
+      c[0] += w * k[0]; c[1] += w * k[1]; c[2] += w * k[2];
+    }
+    return c;
+  }
+
   // ---------- rivers ----------
   {
-    const pos = [], uv = [], idx = [];
+    const pos = [], uv = [], idx = [], wcol = [];
     let run = null;
     const flush = () => { run = null; };
     for (let x = world.X0 - world.PAD; x <= world.X1 + world.PAD; x += 2) {

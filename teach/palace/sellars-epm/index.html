@@ -20,6 +20,17 @@
   #card small { display: block; font: 12px ui-sans-serif, system-ui; letter-spacing: 0.18em; text-transform: uppercase; opacity: 0.8; margin-bottom: 6px; }
   #hud { position: fixed; right: 16px; bottom: 12px; font: 12px ui-monospace, monospace; color: #fff; opacity: 0.28; }
   #keys { position: fixed; left: 16px; bottom: 12px; font: 12px ui-sans-serif, system-ui; color: #fff; opacity: 0.28; }
+  #chapBtn { position: fixed; left: 16px; top: 14px; font: 12px ui-sans-serif, system-ui; color: #fff; opacity: 0.35;
+    cursor: pointer; letter-spacing: 0.12em; text-transform: uppercase; user-select: none; z-index: 1; }
+  #chapBtn:hover { opacity: 0.8; }
+  #chapters { position: fixed; left: 12px; top: 40px; width: 360px; max-height: calc(100% - 90px); overflow-y: auto;
+    background: rgba(10, 13, 18, 0.86); border: 1px solid rgba(239, 230, 214, 0.18); border-radius: 8px; padding: 6px 0;
+    color: #efe6d6; font: 14px/1.35 Georgia, serif; display: none; z-index: 3; backdrop-filter: blur(6px); }
+  #chapters.open { display: block; }
+  #chapters div { padding: 7px 14px; cursor: pointer; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+  #chapters div:hover { background: rgba(239, 230, 214, 0.08); }
+  #chapters div.cur { background: rgba(239, 230, 214, 0.14); }
+  #chapters small { font: 11px ui-monospace, monospace; opacity: 0.55; align-self: center; }
 </style>
 <script type="importmap">
 { "imports": {
@@ -37,9 +48,11 @@
   <button disabled>Begin</button>
 </div></div>
 <div id="card"></div>
+<div id="chapBtn">Chapters</div>
+<div id="chapters"></div>
 <div id="hud"></div>
 <div id="keys">space pause · ←/→ 15 s</div>
-<audio id="narration" src="narration.m4a" preload="auto"></audio>
+<audio id="narration" preload="auto"></audio>
 <script type="module">
 import * as THREE from 'three';
 import { createEngine } from '../engine/app.js';
@@ -49,6 +62,9 @@ const q = new URLSearchParams(location.search);
 const overlay = document.getElementById('overlay'), status = overlay.querySelector('.status'), btn = overlay.querySelector('button');
 const say = (s) => { status.textContent = s; };
 const [plan, walkData, manifest] = await Promise.all(['plan.json', 'walk.json', 'images/manifest.json'].map((f) => fetch(f).then((r) => r.json())));
+// The narration is loaded whole into memory: seeking a streamed <audio> needs HTTP Range support,
+// which simple static servers (python -m http.server) lack, and without it every seek restarts at 0.
+const narrationReady = fetch('narration.m4a').then((r) => r.blob()).then((b) => { document.getElementById('narration').src = URL.createObjectURL(b); });
 const images = Object.fromEntries(Object.entries(manifest).map(([id, m]) => [id, { ...m, url: m.file }]));
 const tall = plan.vignettes.filter((v) => v.kind === 'tallgrass').map((v) => ({ x: v.c[0], z: v.c[2], r: v.r }));
 
@@ -65,9 +81,8 @@ function showCard(t) {
   const on = u && t < u.t0 + 7;
   if (on && shownUnit !== u.unit) {
     shownUnit = u.unit;
-    const title = u.title.split(' · ').slice(1).join(' · ') || u.title;
-    const m = title.match(/^(Part[s]? [^:]+):\s*(.*)$/);
-    card.innerHTML = m ? `<small>${m[1]}</small>${m[2]}` : title;
+    const part = PARTS[u.unit];
+    card.innerHTML = part ? `<small>Part${part.includes('–') ? 's' : ''} ${part}</small>${bareTitle(u)}` : bareTitle(u);
   }
   card.style.opacity = on ? 1 : 0;
 }
@@ -87,6 +102,9 @@ async function seek(nt) {
 say('Building the landscape around the start…');
 await walk.warmTo(t);
 say(`${fmt(plan.end)} · ${plan.stops.length} stops`);
+say('Loading the narration…');
+await narrationReady;
+say(`${fmt(plan.end)} · ${plan.stops.length} stops`);
 btn.disabled = false;
 btn.onclick = () => { overlay.style.opacity = 0; setTimeout(() => overlay.remove(), 1300); audio.currentTime = t; audio.play(); playing = true; };
 addEventListener('keydown', (e) => {
@@ -95,15 +113,101 @@ addEventListener('keydown', (e) => {
   if (e.code === 'ArrowLeft') seek(t - 15);
 });
 
+// ---------- free walk: F toggles; mouse looks (pointer lock), WASD walks, shift jogs ----------
+const lockPointer = () => { try { const r = engine.renderer.domElement.requestPointerLock?.(); r?.catch?.(() => {}); } catch (e) { /* lock refused: keys still work */ } };
+const W = engine.world, canvas = engine.renderer.domElement;
+let mode = 'walk';                      // 'walk' | 'free' | 'return'
+const free = { pos: new THREE.Vector3(), yaw: 0, pitch: 0, keys: new Set() };
+let ret = null;                         // { from, fromQ, t0 } while gliding back to the trail
+const eFree = new THREE.Euler(0, 0, 0, 'YXZ');
+function enterFree(pose) {
+  mode = 'free';
+  free.pos.copy(pose.pos);
+  eFree.setFromQuaternion(pose.quat, 'YXZ'); free.yaw = eFree.y; free.pitch = eFree.x;
+  lockPointer();
+  keysEl.textContent = 'free walk · mouse look · WASD · shift jog · F return to the trail';
+}
+function leaveFree() {
+  mode = 'return';
+  ret = { from: free.pos.clone(), fromQ: new THREE.Quaternion().setFromEuler(new THREE.Euler(free.pitch, free.yaw, 0, 'YXZ')), t0: performance.now() };
+  document.exitPointerLock?.();
+  keysEl.textContent = keysDefault;
+}
+canvas.addEventListener('click', () => { if (mode === 'free' && document.pointerLockElement !== canvas) lockPointer(); });
+addEventListener('mousemove', (e) => {
+  if (mode !== 'free' || document.pointerLockElement !== canvas) return;
+  free.yaw -= e.movementX * 0.0022;
+  free.pitch = THREE.MathUtils.clamp(free.pitch - e.movementY * 0.0022, -1.35, 1.35);
+});
+addEventListener('keydown', (e) => {
+  if (e.code === 'KeyF') { if (mode === 'free') leaveFree(); else if (mode === 'walk') enterFree(walk.pose(t)); }
+  if (['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ShiftLeft', 'ShiftRight'].includes(e.code)) free.keys.add(e.code);
+});
+addEventListener('keyup', (e) => free.keys.delete(e.code));
+const keysEl = document.getElementById('keys'), keysDefault = 'space pause · ←/→ 15 s · [ ] chapter · C chapters · F free walk';
+keysEl.textContent = keysDefault;
+function stepFree(dt) {
+  const k = free.keys, fwd = (k.has('KeyW') ? 1 : 0) - (k.has('KeyS') ? 1 : 0), side = (k.has('KeyD') ? 1 : 0) - (k.has('KeyA') ? 1 : 0);
+  const speed = (k.has('ShiftLeft') || k.has('ShiftRight')) ? 5 : 1.8;
+  if (fwd || side) {
+    const l = Math.hypot(fwd, side), sy = Math.sin(free.yaw), cy = Math.cos(free.yaw);
+    free.pos.x += (-sy * fwd + cy * side) / l * speed * dt;
+    free.pos.z += (-cy * fwd - sy * side) / l * speed * dt;
+  }
+  free.pos.x = THREE.MathUtils.clamp(free.pos.x, W.X0 - W.PAD + 50, W.X1 + W.PAD - 50);
+  free.pos.z = THREE.MathUtils.clamp(free.pos.z, -3400, 3400);
+  const gy = Math.max(W.height(free.pos.x, free.pos.z), ...(W.stillWaters.filter((s) => free.pos.x > s.x0 && free.pos.x < s.x1).map((s) => s.y + 0.3))) + plan.EYE;
+  free.pos.y += (gy - free.pos.y) * Math.min(1, dt * 10);
+  return { pos: free.pos.clone(), quat: new THREE.Quaternion().setFromEuler(new THREE.Euler(free.pitch, free.yaw, 0, 'YXZ')) };
+}
+
+// ---------- chapters: C (or the label) opens the list; [ and ] step; jumps move walk + audio together ----------
+const chapEl = document.getElementById('chapters');
+const PARTS = { U0: '', U1: 'I', U2: 'II', U3: 'III', U4: 'IV', U5: 'V–VI', U6: 'VII', U7: 'VIII', U8: 'IX', U9: 'X–XI', U10: 'XII–XIV', U11: 'XV', U12: 'XVI' };
+const bareTitle = (u) => (u.title.split(' · ').slice(1).join(' · ') || u.title).replace(/^Parts? [IVX–-]+:\s*/, '');
+const chapTitle = (u) => (PARTS[u.unit] ? `<em style="opacity:.6;font-style:normal">${PARTS[u.unit]}</em>&ensp;` : '') + bareTitle(u);
+units.forEach((u, i) => {
+  const d = document.createElement('div');
+  d.innerHTML = `<span>${chapTitle(u)}</span><small>${fmt(u.t0)}</small>`;
+  d.onclick = () => goChapter(i);
+  chapEl.appendChild(d);
+});
+const curChapter = () => { let i = 0; units.forEach((u, k) => { if (t >= u.t0 - 1.5) i = k; }); return i; };
+async function goChapter(i) {
+  i = THREE.MathUtils.clamp(i, 0, units.length - 1);
+  chapEl.classList.remove('open');
+  if (mode !== 'walk') { mode = 'walk'; document.exitPointerLock?.(); keysEl.textContent = keysDefault; }
+  shownUnit = null;
+  await seek(Math.max(0, units[i].t0 - 1));
+}
+document.getElementById('chapBtn').onclick = () => chapEl.classList.toggle('open');
+addEventListener('keydown', (e) => {
+  if (e.code === 'KeyC') chapEl.classList.toggle('open');
+  if (e.code === 'BracketRight') goChapter(curChapter() + 1);
+  if (e.code === 'BracketLeft') goChapter(t - units[curChapter()].t0 > 8 ? curChapter() : curChapter() - 1);
+  if (e.code === 'Escape') chapEl.classList.remove('open');
+});
+
 const hud = document.getElementById('hud');
+let lastNow = performance.now();
 function frame(now) {
+  const dt = Math.min(0.1, (now - lastNow) / 1000); lastNow = now;
   if (playing && !audio.paused) t = audio.currentTime;
-  const { pos, quat, s } = walk.pose(t);
+  const trail = walk.pose(t);
+  let { pos, quat } = trail;
+  const { s } = trail;
+  if (mode === 'free') ({ pos, quat } = stepFree(dt));
+  else if (mode === 'return') {
+    const k = THREE.MathUtils.smootherstep(Math.min(1, (now - ret.t0) / 2500), 0, 1);
+    pos = ret.from.clone().lerp(trail.pos, k); quat = ret.fromQ.clone().slerp(trail.quat, k);
+    if (k >= 1) mode = 'walk';
+  }
   walk.sync(s);
   for (const w of walk.winds) w.value = now / 1000;
   engine.frame(pos, quat, now / 1000);
   showCard(t);
   hud.textContent = `${fmt(t)} / ${fmt(plan.end)}`;
+  if (chapEl.classList.contains('open')) { const c = curChapter(); [...chapEl.children].forEach((d, i) => d.classList.toggle('cur', i === c)); }
   requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);

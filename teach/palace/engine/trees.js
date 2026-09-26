@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Tree } from 'ez-tree';
 
 // Generate one EZ-Tree variant normalised to 1 m tall with its base at the origin.
-export function makeVariant(preset, seed, tint, { noLeaves = false, bark = null } = {}) {
+export function makeVariant(preset, seed, tint, { noLeaves = false, bark = null, leaf = null } = {}) {
   const tree = new Tree();
   tree.loadPreset(preset);
   tree.options.seed = seed;
@@ -17,6 +17,8 @@ export function makeVariant(preset, seed, tint, { noLeaves = false, bark = null 
   const bGeo = fix(tree.branchesMesh.geometry), lGeo = fix(tree.leavesMesh.geometry);
   const bMat = tree.branchesMesh.material, lMat = tree.leavesMesh.material;
   lMat.alphaToCoverage = true;
+  // linear RGB leaf multiplier; values above 1 are needed to push the green leaf texture to autumn reds and golds
+  if (leaf) lMat.color.setRGB(leaf[0], leaf[1], leaf[2]);
   // EZ-Tree's own wind shader bypasses instancing; replace it with an instancing-safe sway.
   const wind = { value: 0 };
   lMat.onBeforeCompile = (sh) => {

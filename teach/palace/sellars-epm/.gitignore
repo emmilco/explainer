@@ -1,2 +1,4 @@
 source/
 audio/
+# assembled narration track: rebuild with build_audio.py from the per-block audio
+narration.m4a
