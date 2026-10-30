@@ -15,3 +15,6 @@ __pycache__/
 
 # Seeding corpus — personal claude.ai conversation analyses; local only
 teach/seeding/
+
+# Python
+.venv/
